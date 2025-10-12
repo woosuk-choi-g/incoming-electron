@@ -19,7 +19,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
-      'react': react,
+      react: react,
     },
     rules: {
       ...js.configs.recommended.rules,
