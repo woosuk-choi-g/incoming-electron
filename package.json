@@ -8,6 +8,7 @@
     "build": "tsc && vite build && electron-builder",
     "clean": "if exist dist rmdir /s /q dist && if exist dist-electron rmdir /s /q dist-electron && if exist release rmdir /s /q release",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write .",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -23,9 +24,11 @@
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "prettier": "^3.6.2",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",
