@@ -1,0 +1,37 @@
+{
+  "name": "electron-playground",
+  "version": "1.0.0",
+  "description": "Electron + React + TypeScript 테스트 프로젝트",
+  "main": "dist/main.js",
+  "homepage": "./",
+  "scripts": {
+    "build": "webpack --mode production",
+    "build-main": "tsc src/main/main.ts --outDir dist",
+    "build-all": "npm run build-main && npm run build",
+    "start": "npm run build-all && electron .",
+    "dev": "concurrently \"webpack --mode development --watch\" \"wait-on dist/bundle.js && npm run build-main && electron .\"",
+    "electron": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/react": "^18.3.26",
+    "@types/react-dom": "^18.3.7",
+    "concurrently": "^9.2.1",
+    "css-loader": "^7.1.2",
+    "electron": "^38.2.2",
+    "html-webpack-plugin": "^5.6.4",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "wait-on": "^9.0.1",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}
