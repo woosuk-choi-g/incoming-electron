@@ -1,8 +1,7 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
-// import { createRequire } from 'node:module'
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import process from 'process';
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -28,7 +27,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
-let timerWin: BrowserWindow | null = null;
+let timerWindows: Map<string, BrowserWindow> = new Map(); // Manage multiple timer windows
 
 function createWindow() {
   win = new BrowserWindow({
@@ -51,41 +50,122 @@ function createWindow() {
   }
 }
 
-function createTimerWindow() {
+function createOverlayTimerWindow(timerId: string, title: string) {
   // If timer window already exists, just focus it
-  if (timerWin && !timerWin.isDestroyed()) {
-    timerWin.focus();
-    return;
+  if (timerWindows.has(timerId)) {
+    const existingWindow = timerWindows.get(timerId);
+    if (existingWindow && !existingWindow.isDestroyed()) {
+      existingWindow.focus();
+      return;
+    }
   }
 
-  timerWin = new BrowserWindow({
-    width: 400,
-    height: 300,
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-    resizable: false,
+  const timerWin = new BrowserWindow({
+    width: 300,
+    height: 150,
+    minWidth: 200,
+    minHeight: 100,
+    maxWidth: 800,
+    maxHeight: 600,
+    frame: false, // Remove window frame for overlay effect
+    alwaysOnTop: true, // Always stay on top
+    skipTaskbar: true, // Don't show in taskbar
+    transparent: true, // Transparent background
+    resizable: true, // Allow resizing
     minimizable: false,
     maximizable: false,
-    title: '10분 타이머',
+    closable: true,
+    title: `${title} - ${timerId}`,
     autoHideMenuBar: true,
   });
 
-  if (VITE_DEV_SERVER_URL) {
-    void timerWin.loadURL(`${VITE_DEV_SERVER_URL}#/timer`);
-  } else {
-    void timerWin.loadFile(path.join(RENDERER_DIST, 'index.html'), {
-      hash: '#/timer'
-    });
-  }
+  // Position window in top-right corner by default
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width } = primaryDisplay.workAreaSize;
+  timerWin.setPosition(width - 320, 20);
 
-  // Close timer window when main window is closed
+  // Load timer with specific timer ID
+  const timerUrl = VITE_DEV_SERVER_URL
+    ? `${VITE_DEV_SERVER_URL}#/timer-overlay/${timerId}`
+    : `${path.join(RENDERER_DIST, 'index.html')}#/timer-overlay/${timerId}`;
+
+  void timerWin.loadURL(timerUrl);
+
+  // Store the window reference
+  timerWindows.set(timerId, timerWin);
+
+  // Close timer window when closed
   timerWin.on('closed', () => {
-    timerWin = null;
+    timerWindows.delete(timerId);
   });
+
+  return timerWin;
+}
+
+function closeTimerWindow(timerId: string) {
+  const timerWin = timerWindows.get(timerId);
+  if (timerWin && !timerWin.isDestroyed()) {
+    timerWin.close();
+    timerWindows.delete(timerId);
+  }
+}
+
+function getAllTimerWindows() {
+  // 사용하지 않는 함수지만 유지 (향후 사용 가능성)
+  return Array.from(timerWindows.keys());
+}
+
+// Timer overlay settings management
+const SETTINGS_DIR = path.join(app.getPath('userData'), 'timer-settings');
+const SETTINGS_FILE = path.join(SETTINGS_DIR, 'overlay-settings.json');
+
+// Ensure settings directory exists
+if (!fs.existsSync(SETTINGS_DIR)) {
+  fs.mkdirSync(SETTINGS_DIR, { recursive: true });
+}
+
+interface TimerSettings {
+  [timerId: string]: {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    opacity: number;
+    theme: string;
+  };
+}
+
+function loadTimerSettings(): TimerSettings {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const data = fs.readFileSync(SETTINGS_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('설정 파일 로드 실패:', error);
+  }
+  return {};
+}
+
+function saveTimerSettings(settings: TimerSettings): void {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('설정 파일 저장 실패:', error);
+  }
+}
+
+function getTimerSettings(timerId: string): any {
+  const settings = loadTimerSettings();
+  return settings[timerId] || null;
+}
+
+function setTimerSettings(timerId: string, settings: any): void {
+  const allSettings = loadTimerSettings();
+  allSettings[timerId] = settings;
+  saveTimerSettings(allSettings);
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -110,7 +190,35 @@ void app.whenReady().then(() => {
   createWindow();
 
   // IPC handlers
-  ipcMain.handle('create-timer-window', () => {
-    createTimerWindow();
+  ipcMain.handle('create-timer-window', (event, { timerId, title }) => {
+    createOverlayTimerWindow(timerId, title);
+  });
+
+  ipcMain.handle('close-timer-window', (event, timerId) => {
+    closeTimerWindow(timerId);
+  });
+
+  ipcMain.handle('set-window-position', (event, { x, y }) => {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow) {
+      focusedWindow.setPosition(x, y);
+    }
+  });
+
+  ipcMain.handle('get-window-position', (_event) => {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow) {
+      const [x, y] = focusedWindow.getPosition();
+      return { x, y };
+    }
+    return { x: 0, y: 0 };
+  });
+
+  ipcMain.handle('get-timer-settings', (event, timerId) => {
+    return getTimerSettings(timerId);
+  });
+
+  ipcMain.handle('set-timer-settings', (event, timerId, settings) => {
+    setTimerSettings(timerId, settings);
   });
 });
