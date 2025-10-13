@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -28,6 +28,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
+let timerWin: BrowserWindow | null = null;
 
 function createWindow() {
   win = new BrowserWindow({
@@ -50,6 +51,43 @@ function createWindow() {
   }
 }
 
+function createTimerWindow() {
+  // If timer window already exists, just focus it
+  if (timerWin && !timerWin.isDestroyed()) {
+    timerWin.focus();
+    return;
+  }
+
+  timerWin = new BrowserWindow({
+    width: 400,
+    height: 300,
+    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    title: '10분 타이머',
+    autoHideMenuBar: true,
+  });
+
+  if (VITE_DEV_SERVER_URL) {
+    void timerWin.loadURL(`${VITE_DEV_SERVER_URL}#/timer`);
+  } else {
+    void timerWin.loadFile(path.join(RENDERER_DIST, 'index.html'), {
+      hash: '#/timer'
+    });
+  }
+
+  // Close timer window when main window is closed
+  timerWin.on('closed', () => {
+    timerWin = null;
+  });
+}
+
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -68,4 +106,11 @@ app.on('activate', () => {
   }
 });
 
-void app.whenReady().then(createWindow);
+void app.whenReady().then(() => {
+  createWindow();
+
+  // IPC handlers
+  ipcMain.handle('create-timer-window', () => {
+    createTimerWindow();
+  });
+});
