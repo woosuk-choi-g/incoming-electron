@@ -1,47 +1,70 @@
 import { useState, useEffect } from 'react';
 
-function Timer() {
-  const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
+interface TimerProps {
+  id?: string;
+  title?: string;
+  duration?: number; // in milliseconds, default 10 minutes
+  onComplete?: () => void;
+}
+
+function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplete }: TimerProps) {
+  const [expiryTime, setExpiryTime] = useState<number | null>(null); // Store expiry time in milliseconds
   const [isRunning, setIsRunning] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0); // Track remaining time as state
 
-  // Timer logic
+  // Update remaining time when expiry time changes
   useEffect(() => {
-    let interval: number | null = null;
-
-    if (isRunning && timeRemaining > 0) {
-      interval = window.setInterval(() => {
-        setTimeRemaining((prevTime) => {
-          if (prevTime <= 1) {
-            setIsRunning(false);
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
+    if (!expiryTime) {
+      setTimeRemaining(0);
+      return;
     }
 
-    return () => {
-      if (interval) window.clearInterval(interval);
-    };
-  }, [isRunning, timeRemaining]);
+    const updateRemainingTime = () => {
+      const remaining = Math.max(0, expiryTime - Date.now());
+      setTimeRemaining(remaining);
 
-  // Format time as MM:SS
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+      // Stop timer if time is up
+      if (remaining === 0 && isRunning) {
+        setIsRunning(false);
+        onComplete?.();
+      }
+    };
+
+    // Update immediately
+    updateRemainingTime();
+
+    // Update every 10ms for smooth display (100fps)
+    const interval = window.setInterval(updateRemainingTime, 10);
+
+    return () => window.clearInterval(interval);
+  }, [expiryTime, isRunning, onComplete]);
+
+  // Format time as MM:SS.SS (SS = centiseconds)
+  const formatTime = (milliseconds: number) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const centiseconds = Math.floor((milliseconds % 1000) / 10); // Get centiseconds (0-99)
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   };
 
   // Start timer function
   const startTimer = () => {
-    setTimeRemaining(600); // Reset to 10 minutes
+    setExpiryTime(Date.now() + duration);
     setIsRunning(true);
+  };
+
+  // Reset timer function
+  const resetTimer = () => {
+    setExpiryTime(Date.now() + duration);
+    setIsRunning(false);
   };
 
   return (
     <div className="timer-container">
       <div className="timer-header">
-        <h1>10분 타이머</h1>
+        <h1>{title}</h1>
+        {id && <small>ID: {id}</small>}
       </div>
 
       <div className="timer-content">
@@ -59,6 +82,12 @@ function Timer() {
           >
             {isRunning ? '타이머 실행 중...' : '타이머 시작'}
           </button>
+          <button
+            className="timer-button"
+            onClick={resetTimer}
+          >
+            재설정
+          </button>
         </div>
 
         {timeRemaining === 0 && (
@@ -66,10 +95,7 @@ function Timer() {
             <p>타이머 완료!</p>
             <button
               className="timer-button"
-              onClick={() => {
-                setTimeRemaining(600);
-                setIsRunning(false);
-              }}
+              onClick={resetTimer}
             >
               다시 시작
             </button>
