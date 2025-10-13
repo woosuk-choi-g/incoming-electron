@@ -1,28 +1,12 @@
-import { ipcRenderer, contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
-// --------- Expose some API to the Renderer process ---------
+// 타입 안전성을 위한 인터페이스 정의
+interface ElectronAPI {
+  createTimerWindow: () => Promise<void>;
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
-  createTimerWindow: () => ipcRenderer.invoke('create-timer-window'),
-
-  on(...args: Parameters<typeof ipcRenderer.on>) {
-    const [channel, listener] = args;
-    return ipcRenderer.on(channel, (event, ...args) =>
-      listener(event, ...args)
-    );
-  },
-
-  off(...args: Parameters<typeof ipcRenderer.off>) {
-    const [channel, ...omit] = args;
-    return ipcRenderer.off(channel, ...omit);
-  },
-
-  send(...args: Parameters<typeof ipcRenderer.send>) {
-    const [channel, ...omit] = args;
-    return ipcRenderer.send(channel, ...omit);
-  },
-
-  invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
-    const [channel, ...omit] = args;
-    return ipcRenderer.invoke(channel, ...omit);
+  createTimerWindow: async () => {
+    return ipcRenderer.invoke('create-timer-window');
   }
-});
+} satisfies ElectronAPI);
