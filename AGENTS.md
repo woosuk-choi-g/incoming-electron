@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/` contains the renderer (React + TypeScript); organise UI in `components/`, `hooks/`, `styles/`, and `assets/`, with fixtures in `__mocks__/` and future specs in `__tests__/`.
+- `src/` contains the renderer (React + TypeScript); organise UI in `components/`, `hooks/`, `styles/`, and `assets/`, with fixtures in `__mocks__/` and end-to-end specs in `tests/e2e/`.
 - `electron/` houses the main process (`main.ts`), the preload bridge, and shared types in `electron-env.d.ts`; keep renderer contracts aligned with these definitions.
 - `public/` holds static assets, while generated folders (`dist/`, `dist-electron/`, `release/`) stay out of commits. Update `vite.config.ts`, `tsconfig*.json`, lint/format configs, and `electron-builder.json5` together when altering build flow.
 
@@ -11,8 +11,10 @@
 - `npm run build` executes `tsc`, `vite build`, and `electron-builder`, emitting artefacts to `dist*` and `release/`.
 - `npm run clean` removes build outputs before a fresh package.
 - Leverage Context7 for code suggestions when drafting or refining implementation details.
+- Agents must invoke Context7 whenever writing or refactoring implementation code to stay aligned with shared patterns.
 - `npm run lint`, `npm run format`, and `npm run preview` lint, format, or serve the renderer build for quick smoke checks.
-- Ensure every new feature or fix is covered by passing automated tests before handoff.
+- `npm run test:e2e` runs the Playwright Electron suite (automatically performs a production build first); use `npm run test:e2e:ui` to debug interactively.
+- Ensure every new feature or fix passes the Playwright E2E checks before handoff.
 
 ## Coding Style & Naming Conventions
 - Prettier enforces 2-space indent, semicolons, single quotes, and 80-character lines; keep sources in `.ts`/`.tsx`.
@@ -20,9 +22,10 @@
 - Restrict the preload surface: define IPC types in `electron-env.d.ts`, expose only curated APIs, and strip stray `console` calls before release.
 
 ## Testing Guidelines
-- Seed tests under `src/__tests__/` and place reusable fixtures in `src/__mocks__/`.
-- Adopt Vitest with React Testing Library (fits Vite); after installing, run suites via `npx vitest --run` and add `"test": "vitest"` to `package.json`.
-- Prioritise coverage on timer reducers, IPC handlers, and primary hooks before review, keeping specs deterministic through shared mocks.
+- End-to-end coverage lives in `tests/e2e/` and is implemented with Playwright’s native Electron support.
+- Run `npm run test:e2e` locally (it performs `npm run build` automatically) and escalate failures before submission.
+- Use `npm run test:e2e:ui` to iteratively debug or capture evidence; keep specs deterministic via shared fixtures in `src/__mocks__/` when needed.
+- Focus coverage on timer overlay flows, IPC handlers, and primary renderer journeys that impact the desktop experience.
 
 ## Commit & Pull Request Guidelines
 - Follow existing history: short, imperative, lower-case subjects (`add timer overlay`) with optional wrapped body content.
