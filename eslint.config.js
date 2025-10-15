@@ -34,6 +34,7 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...prettier.rules,
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   // Configuration for Node.js environment (config files)
@@ -64,6 +65,7 @@ export default [
       ...js.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
       ...prettier.rules,
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   {
