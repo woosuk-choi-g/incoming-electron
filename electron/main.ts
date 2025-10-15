@@ -110,10 +110,6 @@ function closeTimerWindow(timerId: string) {
   }
 }
 
-function getAllTimerWindows() {
-  // 사용하지 않는 함수지만 유지 (향후 사용 가능성)
-  return Array.from(timerWindows.keys());
-}
 
 // Timer overlay settings management
 const SETTINGS_DIR = path.join(app.getPath('userData'), 'timer-settings');
@@ -142,7 +138,6 @@ function loadTimerSettings(): TimerSettings {
       return JSON.parse(data);
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('설정 파일 로드 실패:', error);
   }
   return {};
@@ -152,7 +147,6 @@ function saveTimerSettings(settings: TimerSettings): void {
   try {
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('설정 파일 저장 실패:', error);
   }
 }
@@ -190,22 +184,22 @@ void app.whenReady().then(() => {
   createWindow();
 
   // IPC handlers
-  ipcMain.handle('create-timer-window', (event, { timerId, title }) => {
+  ipcMain.handle('create-timer-window', (_event, { timerId, title }) => {
     createOverlayTimerWindow(timerId, title);
   });
 
-  ipcMain.handle('close-timer-window', (event, timerId) => {
+  ipcMain.handle('close-timer-window', (_event, timerId) => {
     closeTimerWindow(timerId);
   });
 
-  ipcMain.handle('set-window-position', (event, { x, y }) => {
+  ipcMain.handle('set-window-position', (_event, { x, y }) => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) {
       focusedWindow.setPosition(x, y);
     }
   });
 
-  ipcMain.handle('get-window-position', (_event) => {
+  ipcMain.handle('get-window-position', () => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) {
       const [x, y] = focusedWindow.getPosition();
@@ -214,11 +208,11 @@ void app.whenReady().then(() => {
     return { x: 0, y: 0 };
   });
 
-  ipcMain.handle('get-timer-settings', (event, timerId) => {
+  ipcMain.handle('get-timer-settings', (_event, timerId) => {
     return getTimerSettings(timerId);
   });
 
-  ipcMain.handle('set-timer-settings', (event, timerId, settings) => {
+  ipcMain.handle('set-timer-settings', (_event, timerId, settings) => {
     setTimerSettings(timerId, settings);
   });
 });
