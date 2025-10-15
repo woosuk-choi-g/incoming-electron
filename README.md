@@ -117,3 +117,9 @@ npm run format
 ## 지원
 
 문의사항이 있으시면 [Issues](https://github.com/your-username/timer-overlay/issues) 페이지를 통해 연락주세요.
+
+## Playwright E2E Tests
+
+- Execute the Electron automation suite with `npm run test:e2e` (this command runs a fresh production build first).
+- Launch Playwright's interactive test runner when you need to debug: `npm run test:e2e:ui` (run `npm run build` beforehand if assets changed).
+

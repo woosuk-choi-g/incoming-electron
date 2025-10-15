@@ -10,7 +10,9 @@
 - `npm run dev` runs Vite with `vite-plugin-electron`, launching Electron alongside the renderer with hot reload.
 - `npm run build` executes `tsc`, `vite build`, and `electron-builder`, emitting artefacts to `dist*` and `release/`.
 - `npm run clean` removes build outputs before a fresh package.
+- Leverage Context7 for code suggestions when drafting or refining implementation details.
 - `npm run lint`, `npm run format`, and `npm run preview` lint, format, or serve the renderer build for quick smoke checks.
+- Ensure every new feature or fix is covered by passing automated tests before handoff.
 
 ## Coding Style & Naming Conventions
 - Prettier enforces 2-space indent, semicolons, single quotes, and 80-character lines; keep sources in `.ts`/`.tsx`.

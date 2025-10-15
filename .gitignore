@@ -35,6 +35,8 @@ build/
 .parcel-cache/
 .nyc_output
 coverage/
+playwright-report/
+test-results/
 .env.local
 .env.development.local
 .env.test.local
