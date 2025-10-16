@@ -61,8 +61,8 @@ function createOverlayTimerWindow(timerId: string, title: string) {
   }
 
   const timerWin = new BrowserWindow({
-    width: 300,
-    height: 150,
+    width: 800,
+    height: 600,
     minWidth: 200,
     minHeight: 100,
     maxWidth: 800,
@@ -82,7 +82,7 @@ function createOverlayTimerWindow(timerId: string, title: string) {
   // Position window in top-right corner by default
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width } = primaryDisplay.workAreaSize;
-  timerWin.setPosition(width - 320, 20);
+  timerWin.setPosition(width - 820, 20);
 
   // Load timer with specific timer ID
   const timerUrl = VITE_DEV_SERVER_URL
