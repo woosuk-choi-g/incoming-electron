@@ -30,6 +30,10 @@ export interface ElectronAPI {
   getWindowPosition: () => Promise<{ x: number; y: number }>;
   getTimerSettings: (timerId: string) => Promise<any>;
   setTimerSettings: (timerId: string, settings: any) => Promise<void>;
+  getTrayInfo: () => Promise<{
+    hasTray: boolean;
+    menuLabels: string[];
+  }>;
 }
 
 declare global {

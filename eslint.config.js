@@ -64,6 +64,7 @@ export default [
         afterAll: 'readonly',
         vi: 'readonly',
         process: 'readonly',
+        window: 'readonly',
       },
     },
     plugins: {

@@ -22,5 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   setTimerSettings: async (timerId: string, settings: any) => {
     return ipcRenderer.invoke('set-timer-settings', timerId, settings);
+  },
+  getTrayInfo: async () => {
+    return ipcRenderer.invoke('get-tray-info');
   }
 } satisfies ElectronAPI);

@@ -1,4 +1,13 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  screen,
+  Menu,
+  Tray,
+  nativeImage,
+  type MenuItemConstructorOptions,
+} from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +37,93 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null;
 let timerWindows: Map<string, BrowserWindow> = new Map(); // Manage multiple timer windows
+let tray: Tray | null = null; // Keep tray alive for app lifetime
+let isQuitting = false;
+let trayMenuLabels: string[] = [];
+
+function getTrayIcon() {
+  const platformAsset =
+    process.platform === 'win32' ? 'tray-icon.png' : 'tray-iconTemplate.png';
+  const explicitPath = path.join(process.env.VITE_PUBLIC, platformAsset);
+
+  if (fs.existsSync(explicitPath)) {
+    const resolved = nativeImage.createFromPath(explicitPath);
+    if (!resolved.isEmpty()) {
+      return resolved;
+    }
+  }
+
+  const fallbackPath = path.join(
+    process.env.VITE_PUBLIC,
+    'electron-vite.svg',
+  );
+  const svgFallback = nativeImage.createFromPath(fallbackPath);
+  if (!svgFallback.isEmpty()) {
+    return svgFallback;
+  }
+
+  const fallbackDataUrl =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACTSURBVHgBpZKBCYAgEEV/TeAIjuIIbdQIuUGt0CS1gW1iZ2jIVaTnhw+Cvs8/OYDJA4Y8kR3ZR2/kmazxJbpUEfQ/Dm/UG7wVwHkjlQdMFfDdJMFaACebnjJGyDWgcnZu2/lrCrl6NCoEHJBrDwEr5NrT6ko/UV8xdLAC2N49mlc5CylpYh8wCwqrvbBGLoKGvz8Bfq0QPWEUo/EAAAAASUVORK5CYII=';
+  return nativeImage.createFromDataURL(fallbackDataUrl);
+}
+
+function showOrCreateMainWindow() {
+  if (win && !win.isDestroyed()) {
+    if (win.isMinimized()) {
+      win.restore();
+    }
+    win.show();
+    win.focus();
+    return;
+  }
+  createWindow();
+}
+
+function createTray() {
+  if (tray) {
+    return tray;
+  }
+
+  const icon = getTrayIcon();
+  tray = new Tray(icon);
+
+  tray.setToolTip(app.getName());
+
+  const menuTemplate: MenuItemConstructorOptions[] = [
+    {
+      label: 'Open',
+      click: () => {
+        showOrCreateMainWindow();
+      },
+    },
+    {
+      label: 'Quit',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      },
+    },
+  ];
+  const contextMenu = Menu.buildFromTemplate(menuTemplate);
+  trayMenuLabels = contextMenu.items
+    .map((item) => item.label)
+    .filter((label): label is string => Boolean(label));
+
+  tray.setContextMenu(contextMenu);
+
+  tray.on('click', () => {
+    showOrCreateMainWindow();
+  });
+
+  return tray;
+}
+
+function getTrayInfo() {
+  return {
+    hasTray: Boolean(tray) && !tray?.isDestroyed(),
+    menuLabels: trayMenuLabels,
+  };
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -40,6 +136,21 @@ function createWindow() {
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString());
+  });
+
+  win.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      if (process.platform === 'darwin') {
+        app.hide();
+      } else {
+        win?.hide();
+      }
+    }
+  });
+
+  win.on('closed', () => {
+    win = null;
   });
 
   if (VITE_DEV_SERVER_URL) {
@@ -166,9 +277,9 @@ function setTimerSettings(timerId: string, settings: any): void {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
+  if (process.platform !== 'darwin' && isQuitting) {
     win = null;
+    app.quit();
   }
 });
 
@@ -182,6 +293,16 @@ app.on('activate', () => {
 
 void app.whenReady().then(() => {
   createWindow();
+  createTray();
+
+  app.on('before-quit', () => {
+    isQuitting = true;
+    if (tray) {
+      tray.destroy();
+      tray = null;
+      trayMenuLabels = [];
+    }
+  });
 
   // IPC handlers
   ipcMain.handle('create-timer-window', (_event, { timerId, title }) => {
@@ -214,5 +335,9 @@ void app.whenReady().then(() => {
 
   ipcMain.handle('set-timer-settings', (_event, timerId, settings) => {
     setTimerSettings(timerId, settings);
+  });
+
+  ipcMain.handle('get-tray-info', () => {
+    return getTrayInfo();
   });
 });
