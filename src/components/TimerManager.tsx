@@ -13,6 +13,13 @@ function TimerManager() {
     { id: 'timer3', title: '3분 타이머', duration: 180000 },
   ]);
 
+  const getElectronAPI = () => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    return (window as typeof window & any).electronAPI;
+  };
+
   const addTimer = async () => {
     const newTimer: TimerConfig = {
       id: `timer${Date.now()}`,
@@ -20,25 +27,30 @@ function TimerManager() {
       duration: 600000
     };
 
-    setTimers(prev => [...prev, newTimer]);
+    const electronAPI = getElectronAPI();
+    if (!electronAPI?.createTimerWindow) {
+      console.error('타이머 창 생성 API를 찾을 수 없습니다. 데스크톱 앱에서 실행 중인지 확인해주세요.');
+      return;
+    }
 
-    // 실제 오버레이 창 생성
     try {
-      await (window as any).electronAPI?.createTimerWindow(newTimer.id, newTimer.title, newTimer.duration);
+      await electronAPI.createTimerWindow(newTimer.id, newTimer.title, newTimer.duration);
+      setTimers(prev => [...prev, newTimer]);
     } catch (error) {
       console.error('타이머 창 생성 실패:', error);
     }
   };
 
   const removeTimer = async (id: string) => {
-    setTimers(prev => prev.filter(timer => timer.id !== id));
-
+    const electronAPI = getElectronAPI();
     // 창 닫기
     try {
-      await (window as any).electronAPI?.closeTimerWindow(id);
+      await electronAPI?.closeTimerWindow(id);
     } catch (error) {
       console.error('타이머 창 닫기 실패:', error);
     }
+
+    setTimers(prev => prev.filter(timer => timer.id !== id));
   };
 
   return (
