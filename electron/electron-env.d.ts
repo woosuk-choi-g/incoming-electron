@@ -22,15 +22,18 @@ declare namespace NodeJS {
 }
 
 // Used in Renderer process, expose in `preload.ts`
-interface Window {
-  ipcRenderer: import('electron').IpcRenderer;
-  electronAPI: {
-    createTimerWindow: (timerId: string, title: string, duration: number) => Promise<void>;
-    closeTimerWindow: (timerId: string) => Promise<void>;
-    getTimerWindows: () => Promise<string[]>;
-    setWindowPosition: (x: number, y: number) => Promise<void>;
-    getWindowPosition: () => Promise<{ x: number; y: number }>;
-    getTimerSettings: (timerId: string) => Promise<any>;
-    setTimerSettings: (timerId: string, settings: any) => Promise<void>;
-  };
+export interface ElectronAPI {
+  createTimerWindow: (timerId: string, title: string, duration: number) => Promise<void>;
+  closeTimerWindow: (timerId: string) => Promise<void>;
+  getTimerWindows: () => Promise<string[]>;
+  setWindowPosition: (x: number, y: number) => Promise<void>;
+  getWindowPosition: () => Promise<{ x: number; y: number }>;
+  getTimerSettings: (timerId: string) => Promise<any>;
+  setTimerSettings: (timerId: string, settings: any) => Promise<void>;
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
 }

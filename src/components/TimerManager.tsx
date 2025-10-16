@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import useElectronAPI from '../hooks/useElectronAPI';
 
 interface TimerConfig {
   id: string;
@@ -12,13 +13,7 @@ function TimerManager() {
     { id: 'timer2', title: '5분 타이머', duration: 300000 },
     { id: 'timer3', title: '3분 타이머', duration: 180000 },
   ]);
-
-  const getElectronAPI = () => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-    return (window as typeof window & any).electronAPI;
-  };
+  const electronAPI = useElectronAPI();
 
   const addTimer = async () => {
     const newTimer: TimerConfig = {
@@ -27,7 +22,6 @@ function TimerManager() {
       duration: 600000
     };
 
-    const electronAPI = getElectronAPI();
     if (!electronAPI?.createTimerWindow) {
       console.error('타이머 창 생성 API를 찾을 수 없습니다. 데스크톱 앱에서 실행 중인지 확인해주세요.');
       return;
@@ -42,7 +36,6 @@ function TimerManager() {
   };
 
   const removeTimer = async (id: string) => {
-    const electronAPI = getElectronAPI();
     // 창 닫기
     try {
       await electronAPI?.closeTimerWindow(id);

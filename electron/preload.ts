@@ -1,15 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-
-// 타입 안전성을 위한 인터페이스 정의
-interface ElectronAPI {
-  createTimerWindow: (timerId: string, title: string, duration: number) => Promise<void>;
-  closeTimerWindow: (timerId: string) => Promise<void>;
-  getTimerWindows: () => Promise<string[]>;
-  setWindowPosition: (x: number, y: number) => Promise<void>;
-  getWindowPosition: () => Promise<{ x: number; y: number }>;
-  getTimerSettings: (timerId: string) => Promise<any>;
-  setTimerSettings: (timerId: string, settings: any) => Promise<void>;
-}
+import type { ElectronAPI } from './electron-env';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   createTimerWindow: async (timerId: string, title: string, duration: number) => {
