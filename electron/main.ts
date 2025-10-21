@@ -24,16 +24,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // │ │ ├── main.js
 // │ │ └── preload.mjs
 // │
-process.env.APP_ROOT = path.join(__dirname, '..');
+const APP_ROOT = process.env.APP_ROOT ?? path.join(__dirname, '..');
+process.env.APP_ROOT = APP_ROOT;
 
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
-export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron');
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist');
+export const MAIN_DIST = path.join(APP_ROOT, 'dist-electron');
+export const RENDERER_DIST = path.join(APP_ROOT, 'dist');
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
-  ? path.join(process.env.APP_ROOT, 'public')
-  : RENDERER_DIST;
+const VITE_PUBLIC_DIR =
+  process.env.VITE_PUBLIC ??
+  (VITE_DEV_SERVER_URL ? path.join(APP_ROOT, 'public') : RENDERER_DIST);
+
+process.env.VITE_PUBLIC = VITE_PUBLIC_DIR;
 
 let win: BrowserWindow | null;
 let timerWindows: Map<string, BrowserWindow> = new Map(); // Manage multiple timer windows
@@ -44,7 +47,7 @@ let trayMenuLabels: string[] = [];
 function getTrayIcon() {
   const platformAsset =
     process.platform === 'win32' ? 'tray-icon.png' : 'tray-iconTemplate.png';
-  const explicitPath = path.join(process.env.VITE_PUBLIC, platformAsset);
+  const explicitPath = path.join(VITE_PUBLIC_DIR, platformAsset);
 
   if (fs.existsSync(explicitPath)) {
     const resolved = nativeImage.createFromPath(explicitPath);
@@ -53,10 +56,7 @@ function getTrayIcon() {
     }
   }
 
-  const fallbackPath = path.join(
-    process.env.VITE_PUBLIC,
-    'electron-vite.svg',
-  );
+  const fallbackPath = path.join(VITE_PUBLIC_DIR, 'electron-vite.svg');
   const svgFallback = nativeImage.createFromPath(fallbackPath);
   if (!svgFallback.isEmpty()) {
     return svgFallback;
@@ -127,7 +127,7 @@ function getTrayInfo() {
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: path.join(VITE_PUBLIC_DIR, 'electron-vite.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
