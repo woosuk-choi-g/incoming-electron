@@ -25,5 +25,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   getTrayInfo: async () => {
     return ipcRenderer.invoke('get-tray-info');
+  },
+  openExternal: async (url: string) => {
+    return ipcRenderer.invoke('open-external', url);
   }
 } satisfies ElectronAPI);

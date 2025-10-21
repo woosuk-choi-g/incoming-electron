@@ -34,6 +34,7 @@ export interface ElectronAPI {
     hasTray: boolean;
     menuLabels: string[];
   }>;
+  openExternal: (url: string) => Promise<void>;
 }
 
 declare global {

@@ -7,6 +7,7 @@ import {
   Tray,
   nativeImage,
   type MenuItemConstructorOptions,
+  shell,
 } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -339,5 +340,9 @@ void app.whenReady().then(() => {
 
   ipcMain.handle('get-tray-info', () => {
     return getTrayInfo();
+  });
+
+  ipcMain.handle('open-external', (_event, url) => {
+    shell.openExternal(url);
   });
 });
