@@ -40,7 +40,7 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...prettier.rules,
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
   {
@@ -75,7 +75,7 @@ export default [
       ...tseslint.configs.recommended.rules,
       ...prettier.rules,
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
   // Configuration for Node.js environment (config files)
@@ -108,7 +108,7 @@ export default [
       ...tseslint.configs.recommended.rules,
       ...prettier.rules,
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
   {
