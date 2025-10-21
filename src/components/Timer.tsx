@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface TimerProps {
   id?: string;
@@ -7,10 +7,30 @@ interface TimerProps {
   onComplete?: () => void;
 }
 
+type TimerDisplays = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  centiseconds: number;
+}
+
 function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplete }: TimerProps) {
   const [expiryTime, setExpiryTime] = useState<number | null>(null); // Store expiry time in milliseconds
   const [isRunning, setIsRunning] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0); // Track remaining time as state
+  const timerDisplays = useMemo<TimerDisplays>(() => {
+    const totalSeconds = Math.floor(timeRemaining / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const centiseconds = Math.floor((timeRemaining % 1000) / 10); // Get centiseconds (0-99)
+    return {
+      hours,
+      minutes,
+      seconds,
+      centiseconds,
+    };
+  }, [timeRemaining]);
 
   // Update remaining time when expiry time changes
   useEffect(() => {
@@ -39,15 +59,6 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
     return () => window.clearInterval(interval);
   }, [expiryTime, isRunning, onComplete]);
 
-  // Format time as MM:SS.SS (SS = centiseconds)
-  const formatTime = (milliseconds: number) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((milliseconds % 1000) / 10); // Get centiseconds (0-99)
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
-  };
-
   // Start timer function
   const startTimer = () => {
     setExpiryTime(Date.now() + duration);
@@ -60,6 +71,10 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
     setIsRunning(false);
   };
 
+  const formatTime = (timerDisplays: TimerDisplays) => {
+    return `${timerDisplays.minutes.toString().padStart(2, '0')}:${timerDisplays.seconds.toString().padStart(2, '0')}.${timerDisplays.centiseconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="timer-container">
       <div className="timer-header">
@@ -70,7 +85,7 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
       <div className="timer-content">
         <div className="timer-display">
           <span className={`timer-time ${isRunning ? 'running' : ''}`}>
-            {formatTime(timeRemaining)}
+            {formatTime(timerDisplays)}
           </span>
         </div>
 
