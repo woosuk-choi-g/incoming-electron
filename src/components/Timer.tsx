@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TimerProps {
   id?: string;
@@ -14,41 +14,70 @@ type TimerDisplays = {
   centiseconds: string;
 }
 
+type RunningState = {
+  type: 'running';
+  startTime: number;
+  expiryTime: number;
+}
+
+type PausedState = {
+  type: 'paused';
+  duration: number;
+}
+
+type TimerState = RunningState | PausedState;
+
 function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplete }: TimerProps) {
-  const [expiryTime, setExpiryTime] = useState<number | null>(null); // Store expiry time in milliseconds
-  const [isRunning, setIsRunning] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0); // Track remaining time as state
+  const [timerState, setTimerState] = useState<TimerState>({
+    type: 'paused',
+    duration,
+  });
 
-  const toTimerDisplays = (timeRemaining: number): TimerDisplays => {
-    const totalSeconds = Math.floor(timeRemaining / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((timeRemaining % 1000) / 10); // Get centiseconds (0-99)
-    return {
-      hours: hours.toString().padStart(2, '0'),
-      minutes: minutes.toString().padStart(2, '0'),
-      seconds: seconds.toString().padStart(2, '0'),
-      centiseconds: centiseconds.toString().padStart(2, '0'),
-    };
-  };
+  const toTimerDisplaysAlter = (timeState: TimerState): TimerDisplays => {
+    switch (timeState.type) {
+      case 'running': {
+        const duration = timeState.expiryTime - Date.now();
+        const hours = Math.floor(duration / 3600000);
+        const minutes = Math.floor((duration % 3600000) / 60000);
+        const seconds = Math.floor((duration % 60000) / 1000);
+        const centiseconds = Math.floor((duration % 1000) / 10); // Get centiseconds (0-99)
+        return {
+          hours: hours.toString().padStart(2, '0'),
+          minutes: minutes.toString().padStart(2, '0'),
+          seconds: seconds.toString().padStart(2, '0'),
+          centiseconds: centiseconds.toString().padStart(2, '0'),
+        };
+      }
+      case 'paused': {
+        const totalSeconds = Math.floor(timeState.duration / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const centiseconds = Math.floor((timeState.duration % 1000) / 10); // Get centiseconds (0-99)
+        return {
+          hours: hours.toString().padStart(2, '0'),
+          minutes: minutes.toString().padStart(2, '0'),
+          seconds: seconds.toString().padStart(2, '0'),
+          centiseconds: centiseconds.toString().padStart(2, '0'),
+        };
+      }
+    }
+  }
 
-  const timerDisplays = useMemo<TimerDisplays>(() => toTimerDisplays(timeRemaining), [timeRemaining]);
+  const [timerDisplays, setTimerDisplays] = useState(toTimerDisplaysAlter(timerState));
 
   // Update remaining time when expiry time changes
   useEffect(() => {
-    if (!expiryTime) {
-      setTimeRemaining(0);
-      return;
-    }
 
     const updateRemainingTime = () => {
-      const remaining = Math.max(0, expiryTime - Date.now());
-      setTimeRemaining(remaining);
+      setTimerDisplays(toTimerDisplaysAlter(timerState));
 
       // Stop timer if time is up
-      if (remaining === 0 && isRunning) {
-        setIsRunning(false);
+      if (timerState.type === 'running' && timerState.expiryTime - Date.now() <= 0) {
+        setTimerState({
+          type: 'paused',
+          duration,
+        });
         onComplete?.();
       }
     };
@@ -56,22 +85,31 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
     // Update immediately
     updateRemainingTime();
 
+    if (timerState.type === 'paused') {
+      return;
+    }
+
     // Update every 10ms for smooth display (100fps)
     const interval = window.setInterval(updateRemainingTime, 10);
 
     return () => window.clearInterval(interval);
-  }, [expiryTime, isRunning, onComplete]);
+  }, [onComplete, timerState]);
 
   // Start timer function
   const startTimer = () => {
-    setExpiryTime(Date.now() + duration);
-    setIsRunning(true);
+    setTimerState({
+      type: 'running',
+      startTime: Date.now(),
+      expiryTime: Date.now() + duration,
+    });
   };
 
   // Reset timer function
   const resetTimer = () => {
-    setExpiryTime(Date.now() + duration);
-    setIsRunning(false);
+    setTimerState({
+      type: 'paused',
+      duration,
+    });
   };
 
   return (
@@ -83,7 +121,7 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
 
       <div className="timer-content">
         <div className="timer-display">
-          <span className={`timer-time ${isRunning ? 'running' : ''}`}>
+          <span className={`timer-time ${timerState.type === 'running' ? 'running' : ''}`}>
             {timerDisplays.minutes}:{timerDisplays.seconds}.{timerDisplays.centiseconds}
           </span>
         </div>
@@ -92,9 +130,9 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
           <button
             className="timer-button"
             onClick={startTimer}
-            disabled={isRunning}
+            disabled={timerState.type === 'running'}
           >
-            {isRunning ? '타이머 실행 중...' : '타이머 시작'}
+            {timerState.type === 'running' ? '타이머 실행 중...' : '타이머 시작'}
           </button>
           <button
             className="timer-button"
@@ -103,18 +141,6 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
             재설정
           </button>
         </div>
-
-        {timeRemaining === 0 && (
-          <div className="timer-complete">
-            <p>타이머 완료!</p>
-            <button
-              className="timer-button"
-              onClick={resetTimer}
-            >
-              다시 시작
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
