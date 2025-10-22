@@ -112,6 +112,23 @@ export default [
     },
   },
   {
+    files: ['scripts/**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...prettier.rules,
+    },
+  },
+  {
     ignores: ['dist/**', 'dist-electron/**', 'release/**'],
   },
 ];

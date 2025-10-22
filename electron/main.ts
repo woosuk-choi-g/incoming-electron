@@ -12,9 +12,25 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 
-// const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const NODE_ENV = process.env.NODE_ENV ?? 'development';
+const envRoot = path.resolve(__dirname, '..');
+const envPaths = [
+  path.join(envRoot, `.env.${NODE_ENV}`),
+  path.join(envRoot, `.env.${NODE_ENV}.local`),
+];
+
+envPaths.forEach((envPath, index) => {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({
+      path: envPath,
+      override: index > 0,
+    });
+  }
+});
 
 // The built directory structure
 //

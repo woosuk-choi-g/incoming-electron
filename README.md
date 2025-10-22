@@ -2,6 +2,11 @@
 
 **Timer Overlay**는 게이머를 위해 설계된 실시간 타이머 오버레이 애플리케이션입니다. 현재 Electron 데스크톱 앱으로 제공되며, 향후 웹 브라우저 지원도 계획하고 있습니다.
 
+## 문서
+
+- [시작하기 가이드](docs/getting-started.md): 의존성 설치, 개발 서버 실행, 품질 점검, E2E 테스트 방법을 정리했습니다.
+- [빌드 환경 변수 가이드](docs/build-environment.md): `.env.development`, `.env.development.local`, `.env.production`, `.env.production.local` 파일의 역할과 빌드 연동 방법을 설명합니다.
+
 ## 주요 기능
 
 ### ⏱️ 타이머 관리
