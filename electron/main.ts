@@ -32,6 +32,18 @@ envPaths.forEach((envPath, index) => {
   }
 });
 
+const configNames = [
+  'OVERLAY_FRAME',
+  'OVERLAY_ALWAYS_ON_TOP',
+  'OVERLAY_SKIP_TASKBAR',
+  'OVERLAY_AUTO_HIDE_MENU_BAR',
+] as const;
+
+const configs = configNames.reduce((acc, name) => {
+  acc[name] = process.env[name] === 'true';
+  return acc;
+}, {} as Record<typeof configNames[number], boolean>);
+
 // The built directory structure
 //
 // ├─┬─┬ dist
@@ -195,16 +207,16 @@ function createOverlayTimerWindow(timerId: string, title: string) {
     minHeight: 100,
     maxWidth: 800,
     maxHeight: 600,
-    frame: false, // Remove window frame for overlay effect
-    alwaysOnTop: true, // Always stay on top
-    skipTaskbar: true, // Don't show in taskbar
+    frame: configs.OVERLAY_FRAME,
+    alwaysOnTop: configs.OVERLAY_ALWAYS_ON_TOP,
+    skipTaskbar: configs.OVERLAY_SKIP_TASKBAR,
     transparent: true, // Transparent background
     resizable: true, // Allow resizing
     minimizable: false,
     maximizable: false,
     closable: true,
     title: `${title} - ${timerId}`,
-    autoHideMenuBar: true,
+    autoHideMenuBar: configs.OVERLAY_AUTO_HIDE_MENU_BAR,
   });
 
   // Position window in top-right corner by default
