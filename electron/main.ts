@@ -217,6 +217,9 @@ function createOverlayTimerWindow(timerId: string, title: string) {
     closable: true,
     title: `${title} - ${timerId}`,
     autoHideMenuBar: configs.OVERLAY_AUTO_HIDE_MENU_BAR,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs'),
+    },
   });
 
   // Position window in top-right corner by default
