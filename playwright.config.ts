@@ -8,11 +8,17 @@ const testDir = path.join(__dirname, 'tests', 'e2e');
 export default defineConfig({
   testDir,
   timeout: 60_000,
-  fullyParallel: true,
+  // Electron tests share OS-level resources such as the tray and user data.
+  // Keep app instances serial to avoid native process conflicts.
+  fullyParallel: false,
+  workers: 1,
   expect: {
     timeout: 10_000,
   },
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
   use: {
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',

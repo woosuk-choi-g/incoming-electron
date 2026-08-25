@@ -1,11 +1,26 @@
 {
   "compilerOptions": {
-    "composite": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["node"]
   },
-  "include": ["vite.config.ts", "eslint.config.js", "playwright.config.ts", "electron/**/*.ts", "tests/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "eslint.config.js",
+    "playwright.config.ts",
+    "electron/**/*.ts",
+    "tests/**/*.ts",
+    "shared/**/*.ts"
+  ]
 }
