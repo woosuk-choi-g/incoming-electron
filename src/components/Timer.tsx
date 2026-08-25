@@ -104,6 +104,37 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
     });
   };
 
+  function pause(timer: RunningState): PausedState {
+    return {
+      type: 'paused',
+      duration: timer.expiryTime - Date.now(),
+    }
+  }
+
+  function pauseTimer() {
+    if (timerState.type === 'paused') {
+      return;
+    }
+
+    setTimerState(pause(timerState));
+  }
+
+  function resume(timer: PausedState): RunningState {
+    return {
+      type: 'running',
+      startTime: Date.now(),
+      expiryTime: Date.now() + timer.duration,
+    }
+  }
+
+  function resumeTimer() {
+    if (timerState.type === 'running') {
+      return;
+    }
+
+    setTimerState(resume(timerState));
+  }
+
   // Reset timer function
   const resetTimer = () => {
     setTimerState({
@@ -133,6 +164,20 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
             disabled={timerState.type === 'running'}
           >
             {timerState.type === 'running' ? '타이머 실행 중...' : '타이머 시작'}
+          </button>
+          <button
+            className="timer-button"
+            onClick={resumeTimer}
+            disabled={timerState.type === 'running'}
+          >
+            재개
+          </button>
+          <button
+            className="timer-button"
+            onClick={pauseTimer}
+            disabled={timerState.type === 'paused'}
+          >
+            일시정지
           </button>
           <button
             className="timer-button"
