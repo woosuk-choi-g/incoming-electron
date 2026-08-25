@@ -1,5 +1,7 @@
 /// <reference types="vite-plugin-electron/electron-env" />
 
+import type { CreateTimerOption, Timer } from '../shared/timer';
+
 declare namespace NodeJS {
   interface ProcessEnv {
     /**
@@ -23,7 +25,11 @@ declare namespace NodeJS {
 
 // Used in Renderer process, expose in `preload.ts`
 export interface ElectronAPI {
-  createTimerWindow: (timerId: string, title: string, duration: number) => Promise<void>;
+  createTimerWindow: (
+    timerId: string,
+    title: string,
+    duration: number
+  ) => Promise<void>;
   closeTimerWindow: (timerId: string) => Promise<void>;
   getTimerWindows: () => Promise<string[]>;
   setWindowPosition: (x: number, y: number) => Promise<void>;
@@ -35,6 +41,7 @@ export interface ElectronAPI {
     menuLabels: string[];
   }>;
   openExternal: (url: string) => Promise<void>;
+  createTimer: (options: CreateTimerOption) => Promise<Timer>;
 }
 
 declare global {

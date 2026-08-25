@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { TimerState, pause, resume } from '../../shared/timerState';
 
 interface TimerProps {
   id?: string;
@@ -12,22 +13,14 @@ type TimerDisplays = {
   minutes: string;
   seconds: string;
   centiseconds: string;
-}
+};
 
-type RunningState = {
-  type: 'running';
-  startTime: number;
-  expiryTime: number;
-}
-
-type PausedState = {
-  type: 'paused';
-  duration: number;
-}
-
-type TimerState = RunningState | PausedState;
-
-function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplete }: TimerProps) {
+function Timer({
+  id = 'timer',
+  title = '타이머',
+  duration = 600000,
+  onComplete,
+}: TimerProps) {
   const [timerState, setTimerState] = useState<TimerState>({
     type: 'paused',
     duration,
@@ -62,18 +55,22 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
         };
       }
     }
-  }
+  };
 
-  const [timerDisplays, setTimerDisplays] = useState(toTimerDisplaysAlter(timerState));
+  const [timerDisplays, setTimerDisplays] = useState(
+    toTimerDisplaysAlter(timerState)
+  );
 
   // Update remaining time when expiry time changes
   useEffect(() => {
-
     const updateRemainingTime = () => {
       setTimerDisplays(toTimerDisplaysAlter(timerState));
 
       // Stop timer if time is up
-      if (timerState.type === 'running' && timerState.expiryTime - Date.now() <= 0) {
+      if (
+        timerState.type === 'running' &&
+        timerState.expiryTime - Date.now() <= 0
+      ) {
         setTimerState({
           type: 'paused',
           duration,
@@ -104,27 +101,12 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
     });
   };
 
-  function pause(timer: RunningState): PausedState {
-    return {
-      type: 'paused',
-      duration: timer.expiryTime - Date.now(),
-    }
-  }
-
   function pauseTimer() {
     if (timerState.type === 'paused') {
       return;
     }
 
     setTimerState(pause(timerState));
-  }
-
-  function resume(timer: PausedState): RunningState {
-    return {
-      type: 'running',
-      startTime: Date.now(),
-      expiryTime: Date.now() + timer.duration,
-    }
   }
 
   function resumeTimer() {
@@ -152,8 +134,11 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
 
       <div className="timer-content">
         <div className="timer-display">
-          <span className={`timer-time ${timerState.type === 'running' ? 'running' : ''}`}>
-            {timerDisplays.minutes}:{timerDisplays.seconds}.{timerDisplays.centiseconds}
+          <span
+            className={`timer-time ${timerState.type === 'running' ? 'running' : ''}`}
+          >
+            {timerDisplays.minutes}:{timerDisplays.seconds}.
+            {timerDisplays.centiseconds}
           </span>
         </div>
 
@@ -163,7 +148,9 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
             onClick={startTimer}
             disabled={timerState.type === 'running'}
           >
-            {timerState.type === 'running' ? '타이머 실행 중...' : '타이머 시작'}
+            {timerState.type === 'running'
+              ? '타이머 실행 중...'
+              : '타이머 시작'}
           </button>
           <button
             className="timer-button"
@@ -179,10 +166,7 @@ function Timer({ id = 'timer', title = '타이머', duration = 600000, onComplet
           >
             일시정지
           </button>
-          <button
-            className="timer-button"
-            onClick={resetTimer}
-          >
+          <button className="timer-button" onClick={resetTimer}>
             재설정
           </button>
         </div>

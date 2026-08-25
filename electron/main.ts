@@ -12,7 +12,10 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import dotenv from 'dotenv';
+import type { CreateTimerOption, Timer } from '../shared/timer';
+import { getTimerDuration, type TimerState } from '../shared/timerState';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -265,6 +268,55 @@ function closeTimerWindow(timerId: string) {
   }
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isTimerState(value: unknown): value is TimerState {
+  if (!value || typeof value !== 'object' || !('type' in value)) {
+    return false;
+  }
+
+  if (value.type === 'paused') {
+    return (
+      'duration' in value &&
+      isFiniteNumber(value.duration) &&
+      value.duration > 0
+    );
+  }
+
+  if (value.type === 'running') {
+    return (
+      'startTime' in value &&
+      'expiryTime' in value &&
+      isFiniteNumber(value.startTime) &&
+      isFiniteNumber(value.expiryTime) &&
+      value.expiryTime > Date.now()
+    );
+  }
+
+  return false;
+}
+
+function validateCreateTimerOption(value: unknown): CreateTimerOption {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('title' in value) ||
+    typeof value.title !== 'string' ||
+    value.title.trim().length === 0 ||
+    !('state' in value) ||
+    !isTimerState(value.state)
+  ) {
+    throw new Error('올바른 타이머 설정이 필요합니다.');
+  }
+
+  return {
+    title: value.title.trim(),
+    state: value.state,
+  };
+}
+
 // Timer overlay settings management
 const SETTINGS_DIR = path.join(app.getPath('userData'), 'timer-settings');
 const SETTINGS_FILE = path.join(SETTINGS_DIR, 'overlay-settings.json');
@@ -366,6 +418,23 @@ void app.whenReady().then(() => {
       createOverlayTimerWindow(timerId, title, duration);
     }
   );
+
+  ipcMain.handle('create-timer', (_event, unsafeOptions: unknown): Timer => {
+    const options = validateCreateTimerOption(unsafeOptions);
+    const timer: Timer = {
+      id: randomUUID(),
+      title: options.title,
+      state: options.state,
+    };
+
+    createOverlayTimerWindow(
+      timer.id,
+      timer.title,
+      getTimerDuration(timer.state)
+    );
+
+    return timer;
+  });
 
   ipcMain.handle('close-timer-window', (_event, timerId) => {
     closeTimerWindow(timerId);

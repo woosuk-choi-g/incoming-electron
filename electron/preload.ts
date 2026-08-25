@@ -1,9 +1,18 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { ElectronAPI } from './electron-env';
+import type { CreateTimerOption } from '../shared/timer';
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  createTimerWindow: async (timerId: string, title: string, duration: number) => {
-    return ipcRenderer.invoke('create-timer-window', { timerId, title, duration });
+  createTimerWindow: async (
+    timerId: string,
+    title: string,
+    duration: number
+  ) => {
+    return ipcRenderer.invoke('create-timer-window', {
+      timerId,
+      title,
+      duration,
+    });
   },
   closeTimerWindow: async (timerId: string) => {
     return ipcRenderer.invoke('close-timer-window', timerId);
@@ -28,5 +37,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   openExternal: async (url: string) => {
     return ipcRenderer.invoke('open-external', url);
-  }
+  },
+  createTimer: async (options: CreateTimerOption) => {
+    return ipcRenderer.invoke('create-timer', options);
+  },
+  // pauseTimer
+  // resumeTimer
 } satisfies ElectronAPI);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent, CSSProperties } from 'react';
-import useElectronAPI from '../hooks/useElectronAPI';
+import { useTimers } from '../features/timer/TimerContext';
+import { getTimerDuration } from '../../shared/timerState';
 
 function minutesToMs(minutes: number): number {
   return minutes * 60000;
@@ -22,27 +23,6 @@ function centisecondsToMs(centiseconds: number): number {
   return centiseconds * 10;
 }
 
-function createTimerConfig(
-  timerConfigDisplay: TimerConfigDisplay
-): TimerConfig {
-  return {
-    id: `timer${Date.now()}`,
-    title: '새 타이머',
-    duration:
-      daysToMs(timerConfigDisplay.days) +
-      hoursToMs(timerConfigDisplay.hours) +
-      minutesToMs(timerConfigDisplay.minutes) +
-      secondsToMs(timerConfigDisplay.seconds) +
-      centisecondsToMs(timerConfigDisplay.centiseconds),
-  };
-}
-
-interface TimerConfig {
-  id: string;
-  title: string;
-  duration: number;
-}
-
 interface TimerConfigDisplay {
   days: number;
   hours: number;
@@ -52,6 +32,7 @@ interface TimerConfigDisplay {
 }
 
 function TimerManager() {
+  const { timers, runtime, createTimer, removeTimer } = useTimers();
   const [timerConfigDisplay, setTimerConfigDisplay] =
     useState<TimerConfigDisplay>({
       days: 0,
@@ -60,44 +41,25 @@ function TimerManager() {
       seconds: 0,
       centiseconds: 0,
     });
-  const [timers, setTimers] = useState<TimerConfig[]>([
-    { id: 'timer1', title: '10분 타이머', duration: minutesToMs(10) },
-    { id: 'timer2', title: '5분 타이머', duration: minutesToMs(5) },
-    { id: 'timer3', title: '3분 타이머', duration: minutesToMs(3) },
-  ]);
-  const electronAPI = useElectronAPI();
-
   const addTimer = async () => {
-    const timerConfig: TimerConfig = createTimerConfig(timerConfigDisplay);
-
-    if (!electronAPI?.createTimerWindow) {
-      console.error(
-        '타이머 창 생성 API를 찾을 수 없습니다. 데스크톱 앱에서 실행 중인지 확인해주세요.'
-      );
-      return;
-    }
+    const duration =
+      daysToMs(timerConfigDisplay.days) +
+      hoursToMs(timerConfigDisplay.hours) +
+      minutesToMs(timerConfigDisplay.minutes) +
+      secondsToMs(timerConfigDisplay.seconds) +
+      centisecondsToMs(timerConfigDisplay.centiseconds);
 
     try {
-      await electronAPI.createTimerWindow(
-        timerConfig.id,
-        timerConfig.title,
-        timerConfig.duration
-      );
-      setTimers((prev) => [...prev, timerConfig]);
+      await createTimer({
+        title: '새 타이머',
+        state: {
+          type: 'paused',
+          duration,
+        },
+      });
     } catch (error) {
       console.error('타이머 창 생성 실패:', error);
     }
-  };
-
-  const removeTimer = async (id: string) => {
-    // 창 닫기
-    try {
-      await electronAPI?.closeTimerWindow(id);
-    } catch (error) {
-      console.error('타이머 창 닫기 실패:', error);
-    }
-
-    setTimers((prev) => prev.filter((timer) => timer.id !== id));
   };
 
   const inputStyle: CSSProperties = {
@@ -117,7 +79,11 @@ function TimerManager() {
   return (
     <div className="timer-manager">
       <h1>오버레이 타이머 관리</h1>
-      <p>각 타이머는 별도의 오버레이 창으로 생성됩니다</p>
+      <p>
+        {runtime === 'electron'
+          ? '각 타이머는 별도의 오버레이 창으로 생성됩니다'
+          : '각 타이머는 별도의 브라우저 창으로 생성됩니다'}
+      </p>
 
       <div>
         <input
@@ -164,7 +130,7 @@ function TimerManager() {
             <div className="timer-info">
               <h3>{timer.title}</h3>
               <p>ID: {timer.id}</p>
-              <p>시간: {Math.floor(timer.duration / 60000)}분</p>
+              <p>시간: {Math.floor(getTimerDuration(timer.state) / 60000)}분</p>
             </div>
             <button
               onClick={() => removeTimer(timer.id)}
