@@ -39,10 +39,13 @@ const configNames = [
   'OVERLAY_AUTO_HIDE_MENU_BAR',
 ] as const;
 
-const configs = configNames.reduce((acc, name) => {
-  acc[name] = process.env[name] === 'true';
-  return acc;
-}, {} as Record<typeof configNames[number], boolean>);
+const configs = configNames.reduce(
+  (acc, name) => {
+    acc[name] = process.env[name] === 'true';
+    return acc;
+  },
+  {} as Record<(typeof configNames)[number], boolean>
+);
 
 // The built directory structure
 //
@@ -190,7 +193,11 @@ function createWindow() {
   }
 }
 
-function createOverlayTimerWindow(timerId: string, title: string) {
+function createOverlayTimerWindow(
+  timerId: string,
+  title: string,
+  duration: number
+) {
   // If timer window already exists, just focus it
   if (timerWindows.has(timerId)) {
     const existingWindow = timerWindows.get(timerId);
@@ -228,9 +235,14 @@ function createOverlayTimerWindow(timerId: string, title: string) {
   timerWin.setPosition(width - 820, 20);
 
   // Load timer with specific timer ID
+  const timerSearchParams = new URLSearchParams({
+    title,
+    duration: duration.toString(),
+  });
+  const timerRoute = `#/timer-overlay/${encodeURIComponent(timerId)}?${timerSearchParams.toString()}`;
   const timerUrl = VITE_DEV_SERVER_URL
-    ? `${VITE_DEV_SERVER_URL}#/timer-overlay/${timerId}`
-    : `${path.join(RENDERER_DIST, 'index.html')}#/timer-overlay/${timerId}`;
+    ? `${VITE_DEV_SERVER_URL}${timerRoute}`
+    : `${path.join(RENDERER_DIST, 'index.html')}${timerRoute}`;
 
   void timerWin.loadURL(timerUrl);
 
@@ -252,7 +264,6 @@ function closeTimerWindow(timerId: string) {
     timerWindows.delete(timerId);
   }
 }
-
 
 // Timer overlay settings management
 const SETTINGS_DIR = path.join(app.getPath('userData'), 'timer-settings');
@@ -337,9 +348,24 @@ void app.whenReady().then(() => {
   });
 
   // IPC handlers
-  ipcMain.handle('create-timer-window', (_event, { timerId, title }) => {
-    createOverlayTimerWindow(timerId, title);
-  });
+  ipcMain.handle(
+    'create-timer-window',
+    (_event, { timerId, title, duration }) => {
+      if (
+        typeof timerId !== 'string' ||
+        timerId.length === 0 ||
+        typeof title !== 'string' ||
+        title.length === 0 ||
+        typeof duration !== 'number' ||
+        !Number.isFinite(duration) ||
+        duration <= 0
+      ) {
+        throw new Error('올바른 타이머 설정이 필요합니다.');
+      }
+
+      createOverlayTimerWindow(timerId, title, duration);
+    }
+  );
 
   ipcMain.handle('close-timer-window', (_event, timerId) => {
     closeTimerWindow(timerId);
