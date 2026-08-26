@@ -1,8 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ElectronAPI } from './electron-env';
 import type { CreateTimerOption, Timer } from '../shared/timer';
 
-contextBridge.exposeInMainWorld('electronAPI', {
+const electronAPI = {
   createTimerWindow: async (
     timerId: string,
     title: string,
@@ -67,4 +66,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   log: async (message: unknown) => {
     ipcRenderer.invoke('log', message);
   },
-} satisfies ElectronAPI);
+};
+
+contextBridge.exposeInMainWorld('electronAPI', electronAPI);
