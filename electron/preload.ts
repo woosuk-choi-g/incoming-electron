@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { CreateTimerOption, Timer } from '../shared/timer';
+import { getTimer, updateTimer } from '../shared/timerIpc';
+import { invokeIpc } from './ipcRendererUtil';
 
 const electronAPI = {
   createTimerWindow: async (
@@ -41,13 +43,13 @@ const electronAPI = {
     return ipcRenderer.invoke('create-timer', options);
   },
   getTimer: async (timerId: string) => {
-    return ipcRenderer.invoke('get-timer', timerId);
+    return invokeIpc(getTimer, timerId);
   },
   getAllTimers: async () => {
     return ipcRenderer.invoke('get-all-timers');
   },
   updateTimer: async (timerId: string, options: CreateTimerOption) => {
-    return ipcRenderer.invoke('update-timer', timerId, options);
+    return invokeIpc(updateTimer, timerId, options);
   },
   removeTimer: async (timerId: string) => {
     return ipcRenderer.invoke('remove-timer', timerId);

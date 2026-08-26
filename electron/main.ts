@@ -16,6 +16,8 @@ import dotenv from 'dotenv';
 import type { CreateTimerOption, Timer } from '../shared/timer';
 import { getTimerDuration, type TimerState } from '../shared/timerState';
 import { createTimerRepository } from './timerRepository';
+import { handleIpc } from './ipcMainUtil';
+import { getTimer, updateTimer } from '../shared/timerIpc';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -441,21 +443,16 @@ void app.whenReady().then(() => {
     return timer;
   });
 
-  ipcMain.handle(
-    'update-timer',
-    (_event, timerId: string, unsafeOption: unknown) => {
-      const options = validateCreateTimerOption(unsafeOption);
-      timerRepository.update(timerId, options);
+  handleIpc(updateTimer, (_event, timerId, unsafeOption) => {
+    const options = validateCreateTimerOption(unsafeOption);
+    timerRepository.update(timerId, options);
 
-      broadcastTimers(timerRepository.getAll());
-      console.log('update-timer in electron');
-      console.log(timerRepository.get(timerId));
-    }
-  );
+    broadcastTimers(timerRepository.getAll());
+  })
 
-  ipcMain.handle('get-timer', (_event, timerId: string) => {
+  handleIpc(getTimer, (_event, timerId) => {
     return timerRepository.get(timerId);
-  });
+  })
 
   ipcMain.handle('get-all-timers', (_event) => {
     return timerRepository.getAll();
