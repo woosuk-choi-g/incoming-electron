@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { ElectronAPI } from './electron-env';
-import type { CreateTimerOption } from '../shared/timer';
+import type { CreateTimerOption, Timer } from '../shared/timer';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   createTimerWindow: async (
@@ -41,6 +41,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createTimer: async (options: CreateTimerOption) => {
     return ipcRenderer.invoke('create-timer', options);
   },
-  // pauseTimer
-  // resumeTimer
+  getTimer: async (timerId: string) => {
+    return ipcRenderer.invoke('get-timer', timerId);
+  },
+  getAllTimers: async () => {
+    return ipcRenderer.invoke('get-all-timers');
+  },
+  updateTimer: async (timerId: string, options: CreateTimerOption) => {
+    return ipcRenderer.invoke('update-timer', timerId, options);
+  },
+  removeTimer: async (timerId: string) => {
+    return ipcRenderer.invoke('remove-timer', timerId);
+  },
+  onTimersUpdated: (callback: (timers: Timer[]) => void) => {
+    const listener = (_event: unknown, timers: Timer[]) => {
+      callback(timers);
+    };
+
+    ipcRenderer.on('timers-updated', listener);
+
+    return () => {
+      ipcRenderer.removeListener('timers-updated', listener);
+    };
+  },
+  log: async (message: unknown) => {
+    ipcRenderer.invoke('log', message);
+  },
 } satisfies ElectronAPI);

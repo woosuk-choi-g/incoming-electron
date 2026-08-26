@@ -12,10 +12,10 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
 import dotenv from 'dotenv';
 import type { CreateTimerOption, Timer } from '../shared/timer';
 import { getTimerDuration, type TimerState } from '../shared/timerState';
+import { createTimerRepository } from './timerRepository';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -78,6 +78,7 @@ let timerWindows: Map<string, BrowserWindow> = new Map(); // Manage multiple tim
 let tray: Tray | null = null; // Keep tray alive for app lifetime
 let isQuitting = false;
 let trayMenuLabels: string[] = [];
+const timerRepository = createTimerRepository();
 
 function getTrayIcon() {
   const platformAsset =
@@ -368,6 +369,12 @@ function setTimerSettings(timerId: string, settings: any): void {
   saveTimerSettings(allSettings);
 }
 
+function broadcastTimers(timers: Timer[]) {
+  BrowserWindow.getAllWindows().forEach((window) => {
+    window.webContents.send('timers-updated', timers);
+  });
+}
+
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -421,11 +428,7 @@ void app.whenReady().then(() => {
 
   ipcMain.handle('create-timer', (_event, unsafeOptions: unknown): Timer => {
     const options = validateCreateTimerOption(unsafeOptions);
-    const timer: Timer = {
-      id: randomUUID(),
-      title: options.title,
-      state: options.state,
-    };
+    const timer = timerRepository.add(options);
 
     createOverlayTimerWindow(
       timer.id,
@@ -433,7 +436,35 @@ void app.whenReady().then(() => {
       getTimerDuration(timer.state)
     );
 
+    broadcastTimers(timerRepository.getAll());
+
     return timer;
+  });
+
+  ipcMain.handle(
+    'update-timer',
+    (_event, timerId: string, unsafeOption: unknown) => {
+      const options = validateCreateTimerOption(unsafeOption);
+      timerRepository.update(timerId, options);
+
+      broadcastTimers(timerRepository.getAll());
+      console.log('update-timer in electron');
+      console.log(timerRepository.get(timerId));
+    }
+  );
+
+  ipcMain.handle('get-timer', (_event, timerId: string) => {
+    return timerRepository.get(timerId);
+  });
+
+  ipcMain.handle('get-all-timers', (_event) => {
+    return timerRepository.getAll();
+  });
+
+  ipcMain.handle('remove-timer', (_event, timerId: string) => {
+    timerRepository.remove(timerId);
+
+    broadcastTimers(timerRepository.getAll());
   });
 
   ipcMain.handle('close-timer-window', (_event, timerId) => {
@@ -470,5 +501,9 @@ void app.whenReady().then(() => {
 
   ipcMain.handle('open-external', (_event, url) => {
     shell.openExternal(url);
+  });
+
+  ipcMain.handle('log', (_event, message: unknown) => {
+    console.log(message);
   });
 });

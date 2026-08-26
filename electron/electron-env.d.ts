@@ -1,6 +1,6 @@
 /// <reference types="vite-plugin-electron/electron-env" />
 
-import type { CreateTimerOption, Timer } from '../shared/timer';
+import { CreateTimerOption } from "../shared/timer";
 
 declare namespace NodeJS {
   interface ProcessEnv {
@@ -42,6 +42,12 @@ export interface ElectronAPI {
   }>;
   openExternal: (url: string) => Promise<void>;
   createTimer: (options: CreateTimerOption) => Promise<Timer>;
+  getTimer: (timerId: string) => Promise<Timer | undefined>;
+  getAllTimers: () => Promise<Timer[]>;
+  updateTimer: (timerId: string, options: CreateTimerOption) => Promise<void>;
+  removeTimer: (timerId: string) => Promise<void>;
+  onTimersUpdated: (callback: (timers: Timer[]) => void) => void;
+  log: (message: unknown) => Promise<void>;
 }
 
 declare global {

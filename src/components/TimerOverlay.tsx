@@ -1,13 +1,28 @@
-import { useParams, useSearchParams } from 'react-router-dom';
-import Timer from './Timer';
+import { useParams } from 'react-router-dom';
+import TimerView from './TimerView';
+import { useCallback, useEffect, useState } from 'react';
+import { Timer } from '../../shared/timer';
+import { pause, resume } from '../../shared/timerState';
 
 function TimerOverlay() {
   const { timerId } = useParams<{ timerId: string }>();
-  const [searchParams] = useSearchParams();
-  const title = searchParams.get('title');
-  const duration = Number(searchParams.get('duration'));
+  const [timer, setTimer] = useState<Timer>();
 
-  if (!timerId || !title || !Number.isFinite(duration) || duration <= 0) {
+  useEffect(() => {
+    if (timerId) {
+      window.electronAPI.getTimer(timerId).then((timer) => {
+        setTimer(timer);
+      });
+    }
+
+    const removeListener = window.electronAPI.onTimersUpdated((timers) => {
+      const newTimer = timers.find((timer) => timer.id === timerId);
+      setTimer(newTimer);
+    });
+    return removeListener;
+  }, [timerId]);
+
+  if (!timerId) {
     return (
       <div className="timer-overlay-error">
         <h2>올바른 타이머 설정이 필요합니다</h2>
@@ -16,16 +31,34 @@ function TimerOverlay() {
     );
   }
 
+  const handlePause = useCallback(() => {
+    const state = timer?.state;
+    if (!state || state.type !== 'running') {
+      return;
+    }
+    window.electronAPI.updateTimer(timerId, {
+      ...timer,
+      state: pause(state),
+    });
+  }, [timer]);
+
+  const handleResume = useCallback(() => {
+    const state = timer?.state;
+    if (!state || state.type !== 'paused') {
+      return;
+    }
+    window.electronAPI.updateTimer(timerId, {
+      ...timer,
+      state: resume(state),
+    });
+  }, [timer]);
+
   return (
     <div className="timer-overlay">
-      <Timer
-        id={timerId}
-        title={title}
-        duration={duration}
-        onComplete={() => {
-          // 타이머 완료 시 창을 닫을 수 있는 로직
-          console.log('타이머 완료:', timerId);
-        }}
+      <TimerView
+        timer={timer}
+        onPause={handlePause}
+        onResume={handleResume}
       />
     </div>
   );
