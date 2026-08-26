@@ -68,4 +68,6 @@ const electronAPI = {
   },
 };
 
+export type ElectronAPI = typeof electronAPI;
+
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

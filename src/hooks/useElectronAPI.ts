@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import type { ElectronAPI } from '../../electron/electron-env';
+import type { ElectronAPI } from '../../electron/preload';
 
 function resolveElectronAPI(): ElectronAPI | undefined {
-  return window.electronAPI;
+  return Reflect.get(window, 'electronAPI');
 }
 
 function useElectronAPI(): ElectronAPI | undefined {

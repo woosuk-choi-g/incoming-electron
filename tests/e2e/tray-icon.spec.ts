@@ -23,7 +23,7 @@ test('creates a tray icon with basic menu actions', async () => {
     await mainWindow.waitForLoadState('domcontentloaded');
 
     const trayInfo = await mainWindow.evaluate(() => {
-      return window.electronAPI.getTrayInfo();
+      return Reflect.get(window, 'electronAPI').getTrayInfo();
     });
 
     expect(trayInfo.hasTray).toBeTruthy();

@@ -1,4 +1,4 @@
-import type { ElectronAPI } from '../../../electron/electron-env';
+import { ElectronAPI } from '../../../electron/preload';
 import type { CreateTimerOption, Timer } from '../../../shared/timer';
 import { getTimerDuration } from '../../../shared/timerState';
 

@@ -3,19 +3,21 @@ import TimerView from './TimerView';
 import { useCallback, useEffect, useState } from 'react';
 import { Timer } from '../../shared/timer';
 import { pause, resume } from '../../shared/timerState';
+import useElectronAPI from '../hooks/useElectronAPI';
 
 function TimerOverlay() {
   const { timerId } = useParams<{ timerId: string }>();
   const [timer, setTimer] = useState<Timer>();
+  const electronAPI = useElectronAPI();
 
   useEffect(() => {
     if (timerId) {
-      window.electronAPI.getTimer(timerId).then((timer) => {
+      electronAPI?.getTimer(timerId).then((timer) => {
         setTimer(timer);
       });
     }
 
-    const removeListener = window.electronAPI.onTimersUpdated((timers) => {
+    const removeListener = electronAPI?.onTimersUpdated((timers) => {
       const newTimer = timers.find((timer) => timer.id === timerId);
       setTimer(newTimer);
     });
@@ -36,7 +38,7 @@ function TimerOverlay() {
     if (!state || state.type !== 'running') {
       return;
     }
-    window.electronAPI.updateTimer(timerId, {
+    electronAPI?.updateTimer(timerId, {
       ...timer,
       state: pause(state),
     });
@@ -47,7 +49,7 @@ function TimerOverlay() {
     if (!state || state.type !== 'paused') {
       return;
     }
-    window.electronAPI.updateTimer(timerId, {
+    electronAPI?.updateTimer(timerId, {
       ...timer,
       state: resume(state),
     });
