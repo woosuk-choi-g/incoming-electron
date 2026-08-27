@@ -11,6 +11,8 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write .",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "pretest:e2e": "npm run build",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
@@ -43,7 +45,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",
-    "vite-plugin-electron-renderer": "^0.14.5"
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vitest": "^3.2.7"
   },
   "main": "dist-electron/main.js"
 }
