@@ -1,13 +1,24 @@
-export interface PausedTimerState {
-  type: 'paused';
-  duration: number;
-}
+import z from "zod";
 
-export interface RunningTimerState {
-  type: 'running';
-  startTime: number;
-  expiryTime: number;
-}
+export const pausedTimerStateSchema = z.object({
+  type: z.literal('paused'),
+  duration: z.number(),
+});
+
+export type PausedTimerState = z.infer<typeof pausedTimerStateSchema>;
+
+export const runningTimerStateSchema = z.object({
+  type: z.literal('running'),
+  startTime: z.number(),
+  expiryTime: z.number(),
+});
+
+export const timerStateSchema = z.discriminatedUnion('type', [
+  pausedTimerStateSchema,
+  runningTimerStateSchema,
+]);
+
+export type RunningTimerState = z.infer<typeof runningTimerStateSchema>;
 
 export type TimerState = PausedTimerState | RunningTimerState;
 

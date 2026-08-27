@@ -18,6 +18,7 @@ import { getTimerDuration, type TimerState } from '../shared/timerState';
 import { createTimerRepository } from './timerRepository';
 import { handleIpc } from './ipcMainUtil';
 import { getTimer, updateTimer } from '../shared/timerIpc';
+import { createLocalPersist, createLocalPersistedData } from './localPersist';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -81,6 +82,7 @@ let tray: Tray | null = null; // Keep tray alive for app lifetime
 let isQuitting = false;
 let trayMenuLabels: string[] = [];
 const timerRepository = createTimerRepository();
+const persist = createLocalPersist(path.join(app.getPath('userData'), 'data.json'));
 
 function getTrayIcon() {
   const platformAsset =
@@ -448,11 +450,13 @@ void app.whenReady().then(() => {
     timerRepository.update(timerId, options);
 
     broadcastTimers(timerRepository.getAll());
-  })
+
+    persist.save(createLocalPersistedData(timerRepository.getAll()));
+  });
 
   handleIpc(getTimer, (_event, timerId) => {
     return timerRepository.get(timerId);
-  })
+  });
 
   ipcMain.handle('get-all-timers', (_event) => {
     return timerRepository.getAll();
@@ -462,6 +466,8 @@ void app.whenReady().then(() => {
     timerRepository.remove(timerId);
 
     broadcastTimers(timerRepository.getAll());
+
+    persist.save(createLocalPersistedData(timerRepository.getAll()));
   });
 
   ipcMain.handle('close-timer-window', (_event, timerId) => {

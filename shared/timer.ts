@@ -1,12 +1,17 @@
-import type { TimerState } from './timerState';
+import { timerStateSchema } from './timerState';
+import z from 'zod';
 
-export interface Timer {
-  id: string;
-  title: string;
-  state: TimerState;
-}
+export const timerSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  state: timerStateSchema,
+});
 
-export interface CreateTimerOption {
-  title: string;
-  state: TimerState;
-}
+export type Timer = z.infer<typeof timerSchema>;
+
+export const createTimerOptionSchema = z.object({
+  title: z.string(),
+  state: timerStateSchema,
+});
+
+export type CreateTimerOption = z.infer<typeof createTimerOptionSchema>;
