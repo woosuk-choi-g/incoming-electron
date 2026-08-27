@@ -3,6 +3,7 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import prettier from 'eslint-config-prettier';
+import globals from 'globals';
 import process from 'process';
 
 export default [
@@ -18,11 +19,7 @@ export default [
         project: ['./tsconfig.json'],
         tsconfigRootDir: process.cwd(),
       },
-      globals: {
-        window: 'readonly',
-        document: 'readonly',
-        console: 'readonly',
-      },
+      globals: globals.browser,
     },
     plugins: {
       '@typescript-eslint': tseslint,
@@ -54,17 +51,8 @@ export default [
         tsconfigRootDir: process.cwd(),
       },
       globals: {
-        describe: 'readonly',
-        it: 'readonly',
-        test: 'readonly',
-        expect: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
-        vi: 'readonly',
-        process: 'readonly',
-        window: 'readonly',
+        ...globals.browser,
+        ...globals.node,
       },
     },
     plugins: {
@@ -89,16 +77,7 @@ export default [
         project: ['./tsconfig.node.json'],
         tsconfigRootDir: process.cwd(),
       },
-      globals: {
-        process: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
-        exports: 'readonly',
-        global: 'readonly',
-        console: 'readonly',
-      },
+      globals: globals.node,
     },
     plugins: {
       '@typescript-eslint': tseslint,
@@ -116,12 +95,7 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: {
-        console: 'readonly',
-        process: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-      },
+      globals: globals.node,
     },
     rules: {
       ...js.configs.recommended.rules,

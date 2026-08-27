@@ -1,130 +1,97 @@
-# Timer Overlay - 게이머를 위한 타이머 오버레이 UI
+# Timer Overlay
 
-**Timer Overlay**는 게이머를 위해 설계된 실시간 타이머 오버레이 애플리케이션입니다. 현재 Electron 데스크톱 앱으로 제공되며, 향후 웹 브라우저 지원도 계획하고 있습니다.
+게임 중 반복 이벤트를 놓치지 않도록 별도 오버레이 창에 카운트다운을
+표시하는 Electron 데스크톱 앱입니다.
 
-## 문서
+현재는 타이머 핵심 흐름을 만드는 초기 단계입니다. 아래의 현재 기능과
+MVP 범위를 구분해 프로젝트 상태를 설명합니다.
 
-- [시작하기 가이드](docs/getting-started.md): 의존성 설치, 개발 서버 실행, 품질 점검, E2E 테스트 방법을 정리했습니다.
-- [빌드 환경 변수 가이드](docs/build-environment.md): `.env.development`, `.env.development.local`, `.env.production`, `.env.production.local` 파일의 역할과 빌드 연동 방법을 설명합니다.
+## 현재 기능
 
-## 주요 기능
+- 시간 입력을 통한 타이머 생성
+- 타이머별 Electron 오버레이 창 생성과 종료
+- 시스템 시간 기준 카운트다운 표시
+- 일시정지와 재개
+- 메인 창의 타이머 목록
+- 시스템 트레이에서 메인 창 열기와 앱 종료
+- 타이머 repository와 JSON 저장 기반
+- Playwright를 이용한 Electron 실행·트레이·오버레이 E2E 테스트
 
-### ⏱️ 타이머 관리
-- 실시간 타이머 생성 및 관리
-- 직관적인 타이머 인터페이스
-- 게임 플레이 중 실시간 타이머 표시
+저장 기반은 구현되어 있지만 앱 시작 시 복구되지 않으며, 생성·삭제·창 간
+상태가 아직 완전히 동기화되지 않습니다. 자세한 작업 순서는
+[로드맵](docs/ROADMAP.md)을 참고하세요.
 
-### 🎨 타이머 커스터마이징
-- 다양한 타이머 스타일 및 테마
-- 사용자 정의 색상 및 폰트 설정
-- 크기 및 위치 조정 가능
+## MVP 범위
 
-### 🔄 타이머 모드
-- **주기성 타이머**: 반복되는 작업을 위한 주기적 알림
-- **1회성 타이머**: 단일 이벤트 기반 타이머
+- 타이머 생성, 수정, 삭제와 프리셋 저장
+- 시작, 일시정지, 재개, 초기화, 완료, 반복
+- 관리자와 여러 오버레이 사이의 상태 동기화
+- 창 위치·스타일 저장과 재실행 복구
+- IPC 입력 검증과 Electron 보안 강화
+- 핵심 로직 테스트, Electron E2E, CI, Windows 설치 파일
 
-### 👥 프로필 공유
-- 사용자 정의 타이머 설정 저장 및 공유
-- 커뮤니티 프로필 공유 시스템
-- 즐겨찾는 설정을 다른 사용자와 공유
-
-### 📊 세션 공유
-- 게임 세션 타이머 데이터 기록
-- 세션 통계 및 분석 기능
-- 다른 플레이어와 세션 데이터 공유
+웹, 모바일, 커뮤니티 공유와 네이티브 오버레이는 MVP에 포함하지 않습니다.
 
 ## 기술 스택
 
-- **Frontend**: React 18+ with TypeScript
-- **Build Tool**: Vite
-- **Desktop Framework**: Electron
-- **Styling**: CSS Modules / Styled Components
-- **State Management**: React Context / Zustand
-- **Testing**: Jest, React Testing Library
+- React 18, TypeScript
+- Electron 30
+- Vite 5와 `vite-plugin-electron`
+- React Router
+- Zod
+- ESLint와 Prettier
+- Playwright Electron E2E
+- electron-builder
 
 ## 프로젝트 구조
 
-```
-electron-overlay-timer/
-├── electron/                 # Electron 메인 프로세스
-│   ├── main.ts              # Electron 메인 엔트리 포인트
-│   ├── preload.ts           # 보안 통신을 위한 프리로드 스크립트
-│   └── electron-env.d.ts    # Electron 타입 정의
-├── src/                     # React 애플리케이션 소스
-│   ├── components/          # 재사용 가능한 컴포넌트들
-│   │   ├── Timer/          # 타이머 관련 컴포넌트
-│   │   ├── Profile/        # 프로필 관리 컴포넌트
-│   │   └── Settings/       # 설정 컴포넌트
-│   ├── hooks/              # 커스텀 React 훅
-│   ├── utils/              # 유틸리티 함수들
-│   ├── styles/             # 스타일 파일들
-│   └── App.tsx             # 메인 애플리케이션 컴포넌트
-├── public/                 # 정적 자산 파일들
-└── docs/                   # 문서 및 가이드
+```text
+incoming-electron/
+├── electron/           # main process, preload, IPC, 로컬 저장
+├── shared/             # renderer와 main이 공유하는 타입과 IPC 계약
+├── src/
+│   ├── components/     # 관리자와 오버레이 UI
+│   ├── features/timer/ # 타이머 context와 runtime gateway
+│   └── hooks/          # renderer hooks
+├── tests/e2e/          # Playwright Electron 시나리오
+├── scripts/            # 빌드 보조 스크립트
+├── public/             # 정적 자산
+└── docs/               # 로드맵과 개발 문서
 ```
 
-## 개발 설정
+## 시작하기
 
-### 사전 요구사항
-- Node.js 18+
-- npm 또는 yarn
-
-### 설치 및 실행
+Node.js 18 이상과 npm이 필요합니다.
 
 ```bash
-# 의존성 설치
 npm install
-
-# 개발 모드로 실행 (Electron 앱)
 npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 린팅 실행
-npm run lint
-
-# 코드 포맷팅
-npm run format
 ```
 
-## 기능 로드맵
+`npm run dev`는 Vite 개발 서버와 Electron 앱을 함께 실행합니다. 자세한
+절차는 [시작하기 가이드](docs/getting-started.md)를 참고하세요.
 
-### 현재 구현된 기능 ✅
-- 기본 타이머 생성 및 표시
-- Electron 데스크톱 앱 프레임워크
+## 품질 검사
 
-### 개발 중인 기능 🚧
-- 타이머 커스터마이징 옵션
-- 프로필 시스템 구현
-- 주기성/1회성 타이머 모드
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm run test:e2e
+```
 
-### 계획된 기능 📋
-- 웹 브라우저 지원
-- 세션 데이터 분석
-- 커뮤니티 공유 플랫폼
-- 모바일 앱 지원
+- `build`는 typecheck, Vite 빌드, 환경 파일 복사, electron-builder 패키징을
+  순서대로 실행합니다.
+- `test:e2e`는 먼저 프로덕션 빌드를 수행한 뒤 실제 Electron GUI를
+  실행합니다.
+- E2E UI 디버깅은 `npm run test:e2e:ui`로 실행할 수 있습니다.
 
-## 기여
+빌드 환경 설정은 [빌드 환경 변수 가이드](docs/build-environment.md)를
+참고하세요.
 
-이 프로젝트에 기여하고 싶으시다면:
+## 문서
 
-1. 프로젝트를 Fork하세요
-2. 기능 브랜치를 생성하세요 (`git checkout -b feature/amazing-feature`)
-3. 변경사항을 커밋하세요 (`git commit -m 'Add some amazing feature'`)
-4. 브랜치를 Push하세요 (`git push origin feature/amazing-feature`)
-5. Pull Request를 생성하세요
-
-## 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 제공됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
-## 지원
-
-문의사항이 있으시면 [Issues](https://github.com/your-username/timer-overlay/issues) 페이지를 통해 연락주세요.
-
-## Playwright E2E Tests
-
-- Execute the Electron automation suite with `npm run test:e2e` (this command runs a fresh production build first).
-- Launch Playwright's interactive test runner when you need to debug: `npm run test:e2e:ui` (run `npm run build` beforehand if assets changed).
-
+- [로드맵](docs/ROADMAP.md)
+- [시작하기 가이드](docs/getting-started.md)
+- [빌드 환경 변수 가이드](docs/build-environment.md)
+- [오버레이 기술 리서치](docs/RESEARCH.md)
