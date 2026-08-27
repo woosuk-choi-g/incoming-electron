@@ -20,7 +20,7 @@ test('creates a tray icon with basic menu actions', async () => {
 
   try {
     const mainWindow = await electronApp.firstWindow();
-    await mainWindow.waitForLoadState('domcontentloaded');
+    await expect(mainWindow.locator('.home-dashboard')).toBeVisible();
 
     const trayInfo = await mainWindow.evaluate(() => {
       return Reflect.get(window, 'electronAPI').getTrayInfo();

@@ -16,10 +16,9 @@ test('opens the main window after launch', async () => {
   });
 
   const window = await electronApp.firstWindow();
-  await window.waitForLoadState('domcontentloaded');
+  await expect(window.locator('.home-dashboard')).toBeVisible();
 
-  const title = await window.title();
-  expect(title).toBe('Vite + React + TS');
+  await expect(window).toHaveTitle('Vite + React + TS');
 
   await electronApp.close();
 });

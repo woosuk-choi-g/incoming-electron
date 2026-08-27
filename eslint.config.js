@@ -103,6 +103,12 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'dist-electron/**', 'release/**'],
+    ignores: [
+      'dist/**',
+      'dist-electron/**',
+      'release/**',
+      'playwright-report/**',
+      'test-results/**',
+    ],
   },
 ];

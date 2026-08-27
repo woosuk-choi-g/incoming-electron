@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=development vite",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
@@ -21,20 +24,19 @@
     "dotenv": "^17.2.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^7.9.4",
+    "react-router-dom": "^7.18.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
-    "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "cross-env": "^10.1.0",
-    "electron": "^30.0.1",
-    "electron-builder": "^24.13.3",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
@@ -43,9 +45,9 @@
     "globals": "^17.11.0",
     "prettier": "^3.6.2",
     "typescript": "^5.2.2",
-    "vite": "^5.1.6",
-    "vite-plugin-electron": "^0.28.6",
-    "vite-plugin-electron-renderer": "^0.14.5",
+    "vite": "^7.3.6",
+    "vite-plugin-electron": "^1.1.1",
+    "vite-plugin-electron-renderer": "^1.0.0",
     "vitest": "^3.2.7"
   },
   "main": "dist-electron/main.js"

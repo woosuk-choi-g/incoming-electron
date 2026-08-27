@@ -61,7 +61,7 @@ incoming-electron/
 
 ## 시작하기
 
-Node.js 18 이상과 npm이 필요합니다.
+Node.js 22.12 이상과 npm이 필요합니다.
 
 ```bash
 npm install

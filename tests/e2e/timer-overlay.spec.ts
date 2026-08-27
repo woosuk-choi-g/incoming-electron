@@ -20,7 +20,7 @@ test('creates and closes a timer overlay window via the manager UI', async () =>
 
   try {
     const mainWindow = await electronApp.firstWindow();
-    await mainWindow.waitForLoadState('domcontentloaded');
+    await expect(mainWindow.locator('.home-dashboard')).toBeVisible();
 
     const timerItems = mainWindow.locator('.timer-item');
     const initialCount = await timerItems.count();
