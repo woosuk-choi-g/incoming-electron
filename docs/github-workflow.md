@@ -25,6 +25,11 @@ application packaging are intentionally excluded.
 The `CodeQL` workflow scans JavaScript and TypeScript changes on pull requests,
 pushes to `main`, and a weekly schedule.
 
+Dependabot checks npm packages and GitHub Actions every Monday at 09:00 in the
+Asia/Seoul time zone. Minor and patch npm updates are grouped by production or
+development dependency type; major npm updates remain separate for deliberate
+review. GitHub Actions updates are grouped into one pull request.
+
 ## Repository security settings
 
 Because secret scanning and push protection are GitHub repository settings,
