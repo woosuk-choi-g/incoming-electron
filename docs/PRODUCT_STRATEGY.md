@@ -1,6 +1,6 @@
 # Timer Overlay 제품 및 운영 전략
 
-_최종 업데이트: 2026-08-28_
+_최종 업데이트: 2026-08-29_
 
 ## 현재 판단
 
@@ -90,6 +90,43 @@ Overwolf는 앱 유통, 게임 호환 계층, 광고와 구독 수익화를 제�
 초기부터 플랫폼에 종속하지 않고, 독립판으로 가치를 검증한 다음 통합 여부를
 결정한다.
 
+## 유료화와 코드 저장소
+
+앱을 유료화하는 것과 GitHub 저장소를 비공개로 전환하는 것은 별개의 결정이다.
+유료 앱도 공개 저장소로 운영할 수 있으며, 핵심 앱을 공개한 채 클라우드 동기화,
+관리형 서비스, 공식 빌드와 코드 서명, 지원을 유료 가치로 제공할 수 있다.
+
+현재 저장소에는 `LICENSE` 파일이 없다. 따라서 코드를 공개하고 있다는 사실만으로
+오픈소스 사용 권한이 부여되지는 않는다. 오픈소스 코어 전략을 확정하기 전에 다음을
+결정한다.
+
+- 상업적 포크를 허용하는 허용적 라이선스를 쓸지
+- 수정본 공개 의무가 있는 카피레프트 라이선스를 쓸지
+- 상표, 공식 배포판 이름과 코드 서명 인증서를 별도로 보호할지
+- 서버 코드, 운영 자격 증명과 유료 콘텐츠를 별도 비공개 저장소로 분리할지
+
+공개 저장소를 유지하면 표준 GitHub-hosted Actions, CodeQL, secret scanning과
+dependency review를 공개 저장소 무료 범위에서 계속 사용할 수 있다. 외부 기여,
+이슈와 공개 로드맵도 초기 제품 신뢰와 수요 검증에 도움이 된다.
+
+저장소를 비공개로 전환하면 다음 영향이 있다.
+
+- GitHub Free의 비공개 저장소 Actions는 계정별 월간 포함 사용량을 소비한다.
+- CodeQL code scanning을 계속 사용하려면 조직과 GitHub Code Security 라이선스가
+  필요하다.
+- 전체 secret scanning과 push protection을 계속 사용하려면 지원되는 조직 플랜과
+  GitHub Secret Protection이 필요하다.
+- dependency graph와 기본 Dependabot alerts는 계속 사용할 수 있지만 일부 고급
+  Dependabot 기능은 제한될 수 있다.
+- 기존 공개 포크는 비공개로 바뀌지 않고 원본에서 분리되며, 이미 복제되거나 배포된
+  소스도 회수할 수 없다.
+- stars와 watchers가 삭제되므로 공개 프로젝트의 발견성과 사회적 증거가 감소한다.
+
+따라서 현재 단계에서는 코어 저장소를 공개로 유지하고 라이선스를 명시하는 방향을
+우선한다. 실제 운영 비용이나 경쟁 우위가 있는 서버 기능이 생기면 이를 별도 비공개
+저장소로 분리한다. 저장소 전체의 비공개 전환은 유료 기능의 비밀 유지 효과가 관련
+GitHub 기능 비용과 커뮤니티 손실보다 클 때만 검토한다.
+
 ## 권장 수익 모델
 
 기본 방향은 `오픈소스 코어 + 자발적 후원 + 선택적 유료 서비스`다.
@@ -106,3 +143,6 @@ Overwolf는 앱 유통, 게임 호환 계층, 광고와 구독 수익화를 제�
 - [Overwolf 앱 수익화 개요](https://dev.overwolf.com/ow-native/monetization/overview/)
 - [Overwolf의 사용자·수익 배분 안내](https://www.overwolf.com/our-commitment/)
 - [GitHub Sponsors 수수료 안내](https://docs.github.com/en/sponsors/sponsoring-open-source-contributors/about-sponsorships-fees-and-taxes)
+- [GitHub 저장소 공개 범위 변경의 영향](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility)
+- [GitHub 보안 기능과 저장소 유형](https://docs.github.com/en/code-security/getting-started/github-security-features)
+- [GitHub Advanced Security 과금](https://docs.github.com/en/billing/concepts/product-billing/github-advanced-security)

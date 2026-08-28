@@ -4,14 +4,13 @@ This repository uses pull requests as the review and integration boundary.
 
 ## Codex setup
 
-Codex needs both repository write access and a way to create pull requests.
-Choose one of these supported paths:
+OpenAI Codex works in a separate Git worktree, reviews the local diff, and uses
+GitHub CLI to publish the resulting branch and pull request. Verify that
+`gh auth status`, `git push`, and `gh pr create` work from the repository.
 
-1. Connect this repository in Codex cloud and grant the Codex GitHub app access.
-   This enables pull request tasks and `@codex review` after code review is
-   enabled for the repository in Codex settings.
-2. For local Codex work, install and authenticate GitHub CLI, then verify that
-   `gh auth status`, `git push`, and `gh pr create` work from the repository.
+Review requests in this workflow refer to an OpenAI Codex task reviewing the
+worktree or pull request diff. Do not post `@codex` mentions on GitHub as part
+of this workflow.
 
 Do not store a personal access token in this repository or in a tracked `.env`
 file. Prefer the GitHub app, Git Credential Manager, or GitHub CLI's credential
