@@ -5,7 +5,10 @@ import path from 'node:path';
 const distMainPath = path.join(process.cwd(), 'dist-electron', 'main.js');
 
 test('opens the main window after launch', async () => {
-  test.skip(!fs.existsSync(distMainPath), 'Run `npm run build` before executing Electron E2E tests.');
+  test.skip(
+    !fs.existsSync(distMainPath),
+    'Run `npm run build` before executing Electron E2E tests.'
+  );
 
   const electronApp = await electron.launch({
     args: [distMainPath],

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { TimerState } from '../../shared/timerState';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { Timer } from '../../shared/timer';
+import { getTimerPresentation } from '../../shared/timerPresentation';
 
 interface TimerViewProps {
   timer?: Timer;
@@ -8,106 +8,70 @@ interface TimerViewProps {
   onResume?: () => void;
 }
 
-type TimerDisplays = {
-  hours: string;
-  minutes: string;
-  seconds: string;
-  centiseconds: string;
-};
-
 function TimerView({ timer, onPause, onResume }: TimerViewProps) {
-  const toTimerDisplaysAlter = (timeState: TimerState): TimerDisplays => {
-    switch (timeState.type) {
-      case 'running': {
-        const duration = timeState.expiryTime - Date.now();
-        if (duration <= 0) {
-          return {
-            hours: '00',
-            minutes: '00',
-            seconds: '00',
-            centiseconds: '00',
-          };
-        }
-        const hours = Math.floor(duration / 3600000);
-        const minutes = Math.floor((duration % 3600000) / 60000);
-        const seconds = Math.floor((duration % 60000) / 1000);
-        const centiseconds = Math.floor((duration % 1000) / 10); // Get centiseconds (0-99)
-        return {
-          hours: hours.toString().padStart(2, '0'),
-          minutes: minutes.toString().padStart(2, '0'),
-          seconds: seconds.toString().padStart(2, '0'),
-          centiseconds: centiseconds.toString().padStart(2, '0'),
-        };
-      }
-      case 'paused': {
-        const totalSeconds = Math.floor(timeState.duration / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        const centiseconds = Math.floor((timeState.duration % 1000) / 10); // Get centiseconds (0-99)
-        return {
-          hours: hours.toString().padStart(2, '0'),
-          minutes: minutes.toString().padStart(2, '0'),
-          seconds: seconds.toString().padStart(2, '0'),
-          centiseconds: centiseconds.toString().padStart(2, '0'),
-        };
-      }
-    }
-  };
-
-  const [timerDisplays, setTimerDisplays] = useState<TimerDisplays>({
-    hours: '00',
-    minutes: '00',
-    seconds: '00',
-    centiseconds: '00',
-  });
-
-  function updateDisplay(state: TimerState) {
-    setTimerDisplays(toTimerDisplaysAlter(state));
-  }
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (!timer) return;
-    const interval = setInterval(() => {
-      updateDisplay(timer.state);
-    }, 10);
-    return () => clearInterval(interval);
+    if (!timer || timer.state.type !== 'running') return;
+    const intervalId = window.setInterval(() => setNow(Date.now()), 10);
+    return () => window.clearInterval(intervalId);
   }, [timer]);
 
+  if (!timer) {
+    return <div className="overlay-loading">타이머 불러오는 중…</div>;
+  }
+
+  const presentation = getTimerPresentation(timer.state, timer.duration, now);
+  const canToggle = presentation.status !== 'expired';
+  const isRunning = presentation.status === 'running';
+  const progressStyle = {
+    '--timer-progress': `${presentation.progress * 360}deg`,
+  } as CSSProperties;
+
   return (
-    <div className="timer-container">
-      <div className="timer-header">
-        <h1>{timer?.title}</h1>
-      </div>
+    <main
+      className={`timer-hud urgency-${presentation.urgency}`}
+      data-testid="timer-hud"
+      data-urgency={presentation.urgency}
+    >
+      <header className="hud-header">
+        <span className="hud-kicker">INCOMING</span>
+        <span className={`status-chip status-${presentation.status}`}>
+          <span className="status-dot" aria-hidden="true" />
+          {presentation.statusLabel}
+        </span>
+      </header>
 
-      <div className="timer-content">
-        <div className="timer-display">
-          <span
-            className={`timer-time ${timer?.state.type === 'running' ? 'running' : ''}`}
+      <h1 className="hud-title">{timer.title}</h1>
+      <div className="timer-ring" style={progressStyle} aria-hidden="true">
+        <div className="timer-ring-inner">
+          <output
+            className="timer-time"
+            data-testid="timer-display"
+            aria-label={`${timer.title}, ${presentation.statusLabel}, 남은 시간 ${presentation.display}`}
           >
-            {timerDisplays.minutes}:{timerDisplays.seconds}.
-            {timerDisplays.centiseconds}
-          </span>
-        </div>
-
-        <div className="timer-controls">
-          <button
-            className="timer-button"
-            onClick={onResume}
-            disabled={!timer || timer.state.type !== 'paused'}
-          >
-            재개
-          </button>
-          <button
-            className="timer-button"
-            onClick={onPause}
-            disabled={!timer || timer.state.type !== 'running'}
-          >
-            일시정지
-          </button>
+            {presentation.display}
+          </output>
         </div>
       </div>
-    </div>
+
+      <div className="hud-footer">
+        <span className="precision-label">1/100 SEC PRECISION</span>
+        <button
+          type="button"
+          className="primary-action"
+          onClick={isRunning ? onPause : onResume}
+          disabled={!canToggle}
+          data-testid="timer-toggle"
+        >
+          {presentation.status === 'expired'
+            ? '완료'
+            : isRunning
+              ? '일시정지'
+              : '시작'}
+        </button>
+      </div>
+    </main>
   );
 }
 

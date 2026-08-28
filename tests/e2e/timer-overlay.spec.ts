@@ -4,7 +4,9 @@ import path from 'node:path';
 
 const distMainPath = path.join(process.cwd(), 'dist-electron', 'main.js');
 
-test('creates and closes a timer overlay window via the manager UI', async () => {
+// Playwright requires fixture arguments to use object destructuring.
+// eslint-disable-next-line no-empty-pattern
+test('creates and closes a timer overlay window via the manager UI', async ({}, testInfo) => {
   test.skip(
     !fs.existsSync(distMainPath),
     'Run `npm run build` before executing Electron E2E tests.'
@@ -22,35 +24,60 @@ test('creates and closes a timer overlay window via the manager UI', async () =>
     const mainWindow = await electronApp.firstWindow();
     await expect(mainWindow.locator('.home-dashboard')).toBeVisible();
 
-    const timerItems = mainWindow.locator('.timer-item');
+    const timerItems = mainWindow.getByTestId('timer-item');
     const initialCount = await timerItems.count();
 
-    await mainWindow.locator('input[name="seconds"]').fill('5');
+    await mainWindow.getByTestId('duration-seconds').fill('5');
 
     const overlayWindowPromise = electronApp.waitForEvent(
       'window',
       (page) => page !== mainWindow
     );
 
-    await mainWindow.locator('.add-timer-button').click();
+    await mainWindow.getByTestId('create-timer').click();
 
     const overlayWindow = await overlayWindowPromise;
     await overlayWindow.waitForLoadState('domcontentloaded');
 
     await expect(overlayWindow).toHaveURL(/#\/timer-overlay\//);
-    await expect(overlayWindow.locator('.timer-time')).toHaveText('00:05.00');
-    await expect(timerItems).toHaveCount(initialCount + 1);
+    await expect(overlayWindow.getByTestId('timer-display')).toHaveText(
+      '00:05.00'
+    );
+    await overlayWindow.screenshot({
+      path: testInfo.outputPath('overlay-default.png'),
+    });
 
-    const newTimer = mainWindow.locator('.timer-item').last();
-    const timerIdLine = await newTimer
-      .locator('.timer-info p')
-      .first()
-      .textContent();
-    const timerId = timerIdLine?.split('ID:')[1]?.trim();
-    expect(timerId, 'New timer should expose its ID text').toBeTruthy();
+    await overlayWindow.emulateMedia({ reducedMotion: 'reduce' });
+    await electronApp.evaluate(({ BrowserWindow }) => {
+      const overlay = BrowserWindow.getAllWindows().find((window) =>
+        window.webContents.getURL().includes('/timer-overlay/')
+      );
+      overlay?.setSize(240, 140);
+    });
+    await expect(overlayWindow.getByTestId('timer-hud')).toBeVisible();
+    await expect(overlayWindow.getByTestId('timer-toggle')).toBeVisible();
+    const viewportFits = await overlayWindow.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth
+    );
+    expect(viewportFits).toBeTruthy();
+    const animationDuration = await overlayWindow
+      .getByTestId('timer-display')
+      .evaluate((element) => getComputedStyle(element).animationDuration);
+    expect(Number.parseFloat(animationDuration)).toBeLessThanOrEqual(0.000001);
+    await overlayWindow.screenshot({
+      path: testInfo.outputPath('overlay-small-reduced-motion.png'),
+    });
+    await expect(timerItems).toHaveCount(initialCount + 1);
+    const managerViewportFits = await mainWindow.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth
+    );
+    expect(managerViewportFits).toBeTruthy();
+
+    const newTimer = mainWindow.getByTestId('timer-item').last();
+    await expect(newTimer).not.toContainText(/ID:/);
 
     const closePromise = overlayWindow.waitForEvent('close');
-    await newTimer.locator('.remove-timer-button').click();
+    await newTimer.getByTestId('remove-timer').click();
 
     await closePromise;
     await expect(timerItems).toHaveCount(initialCount);
