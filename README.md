@@ -95,4 +95,5 @@ npm run test:e2e
 - [시작하기 가이드](docs/getting-started.md)
 - [빌드 환경 변수 가이드](docs/build-environment.md)
 - [오버레이 기술 리서치](docs/RESEARCH.md)
+- [제품 및 운영 전략](docs/PRODUCT_STRATEGY.md)
 - [ADR 0001: 타이머 완료 여부를 파생 상태로 계산](docs/decisions/0001-derived-timer-completion.md)
