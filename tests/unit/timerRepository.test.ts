@@ -3,10 +3,8 @@ import { createTimerRepository } from '../../electron/timerRepository';
 
 const pausedTimer = {
   title: 'Respawn',
-  state: {
-    type: 'paused' as const,
-    duration: 30_000,
-  },
+  duration: 30_000,
+  repeat: false,
 };
 
 describe('timer repository', () => {
@@ -16,6 +14,7 @@ describe('timer repository', () => {
     const timer = repository.add(pausedTimer);
 
     expect(timer.id).toEqual(expect.any(String));
+    expect(timer.state).toEqual({ type: 'paused', duration: 30_000 });
     expect(repository.get(timer.id)).toEqual(timer);
     expect(repository.getAll()).toEqual([timer]);
   });
@@ -35,12 +34,16 @@ describe('timer repository', () => {
 
     repository.update(timer.id, {
       title: 'Updated respawn',
+      duration: 45_000,
+      repeat: true,
       state: { type: 'paused', duration: 45_000 },
     });
 
     expect(repository.get(timer.id)).toEqual({
       id: timer.id,
       title: 'Updated respawn',
+      duration: 45_000,
+      repeat: true,
       state: { type: 'paused', duration: 45_000 },
     });
   });
@@ -48,9 +51,12 @@ describe('timer repository', () => {
   it('throws when updating a missing timer', () => {
     const repository = createTimerRepository();
 
-    expect(() => repository.update('missing', pausedTimer)).toThrow(
-      'not found timer: missing'
-    );
+    expect(() =>
+      repository.update('missing', {
+        ...pausedTimer,
+        state: { type: 'paused', duration: pausedTimer.duration },
+      })
+    ).toThrow('not found timer: missing');
   });
 
   it('removes a timer', () => {

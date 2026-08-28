@@ -19,9 +19,9 @@ describe('local persist', () => {
   afterEach(async () => {
     vi.useRealTimers();
     await Promise.all(
-      temporaryDirectories.splice(0).map((directory) =>
-        rm(directory, { recursive: true, force: true })
-      )
+      temporaryDirectories
+        .splice(0)
+        .map((directory) => rm(directory, { recursive: true, force: true }))
     );
   });
 
@@ -42,6 +42,8 @@ describe('local persist', () => {
       {
         id: 'timer-1',
         title: 'Respawn',
+        duration: 30_000,
+        repeat: false,
         state: { type: 'paused', duration: 30_000 },
       },
     ]);

@@ -15,12 +15,7 @@ type TimerDisplays = {
   centiseconds: string;
 };
 
-function TimerView({
-  timer,
-  onPause,
-  onResume,
-}: TimerViewProps) {
-
+function TimerView({ timer, onPause, onResume }: TimerViewProps) {
   const toTimerDisplaysAlter = (timeState: TimerState): TimerDisplays => {
     switch (timeState.type) {
       case 'running': {
@@ -60,14 +55,12 @@ function TimerView({
     }
   };
 
-  const [timerDisplays, setTimerDisplays] = useState<TimerDisplays>(
-    {
-      hours: '00',
-      minutes: '00',
-      seconds: '00',
-      centiseconds: '00',
-    }
-  );
+  const [timerDisplays, setTimerDisplays] = useState<TimerDisplays>({
+    hours: '00',
+    minutes: '00',
+    seconds: '00',
+    centiseconds: '00',
+  });
 
   function updateDisplay(state: TimerState) {
     setTimerDisplays(toTimerDisplaysAlter(state));

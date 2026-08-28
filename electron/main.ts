@@ -13,8 +13,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import type { CreateTimerOption, Timer } from '../shared/timer';
-import { getTimerDuration, type TimerState } from '../shared/timerState';
+import {
+  createTimerOptionSchema,
+  type CreateTimerOption,
+  type Timer,
+  type UpdateTimerOption,
+  updateTimerOptionSchema,
+} from '../shared/timer';
 import { createTimerRepository } from './timerRepository';
 import { handleIpc } from './ipcMainUtil';
 import { getTimer, updateTimer } from '../shared/timerIpc';
@@ -82,7 +87,9 @@ let tray: Tray | null = null; // Keep tray alive for app lifetime
 let isQuitting = false;
 let trayMenuLabels: string[] = [];
 const timerRepository = createTimerRepository();
-const persist = createLocalPersist(path.join(app.getPath('userData'), 'data.json'));
+const persist = createLocalPersist(
+  path.join(app.getPath('userData'), 'data.json')
+);
 
 function getTrayIcon() {
   const platformAsset =
@@ -273,53 +280,12 @@ function closeTimerWindow(timerId: string) {
   }
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isTimerState(value: unknown): value is TimerState {
-  if (!value || typeof value !== 'object' || !('type' in value)) {
-    return false;
-  }
-
-  if (value.type === 'paused') {
-    return (
-      'duration' in value &&
-      isFiniteNumber(value.duration) &&
-      value.duration > 0
-    );
-  }
-
-  if (value.type === 'running') {
-    return (
-      'startTime' in value &&
-      'expiryTime' in value &&
-      isFiniteNumber(value.startTime) &&
-      isFiniteNumber(value.expiryTime) &&
-      value.expiryTime > Date.now()
-    );
-  }
-
-  return false;
-}
-
 function validateCreateTimerOption(value: unknown): CreateTimerOption {
-  if (
-    !value ||
-    typeof value !== 'object' ||
-    !('title' in value) ||
-    typeof value.title !== 'string' ||
-    value.title.trim().length === 0 ||
-    !('state' in value) ||
-    !isTimerState(value.state)
-  ) {
-    throw new Error('올바른 타이머 설정이 필요합니다.');
-  }
+  return createTimerOptionSchema.parse(value);
+}
 
-  return {
-    title: value.title.trim(),
-    state: value.state,
-  };
+function validateUpdateTimerOption(value: unknown): UpdateTimerOption {
+  return updateTimerOptionSchema.parse(value);
 }
 
 // Timer overlay settings management
@@ -434,11 +400,7 @@ void app.whenReady().then(() => {
     const options = validateCreateTimerOption(unsafeOptions);
     const timer = timerRepository.add(options);
 
-    createOverlayTimerWindow(
-      timer.id,
-      timer.title,
-      getTimerDuration(timer.state)
-    );
+    createOverlayTimerWindow(timer.id, timer.title, timer.duration);
 
     broadcastTimers(timerRepository.getAll());
 
@@ -446,7 +408,7 @@ void app.whenReady().then(() => {
   });
 
   handleIpc(updateTimer, (_event, timerId, unsafeOption) => {
-    const options = validateCreateTimerOption(unsafeOption);
+    const options = validateUpdateTimerOption(unsafeOption);
     timerRepository.update(timerId, options);
 
     broadcastTimers(timerRepository.getAll());

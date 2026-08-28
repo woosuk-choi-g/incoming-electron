@@ -1,5 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { CreateTimerOption, Timer } from '../shared/timer';
+import type {
+  CreateTimerOption,
+  Timer,
+  UpdateTimerOption,
+} from '../shared/timer';
 import { getTimer, updateTimer } from '../shared/timerIpc';
 import { invokeIpc } from './ipcRendererUtil';
 
@@ -48,7 +52,7 @@ const electronAPI = {
   getAllTimers: async () => {
     return ipcRenderer.invoke('get-all-timers');
   },
-  updateTimer: async (timerId: string, options: CreateTimerOption) => {
+  updateTimer: async (timerId: string, options: UpdateTimerOption) => {
     return invokeIpc(updateTimer, timerId, options);
   },
   removeTimer: async (timerId: string) => {

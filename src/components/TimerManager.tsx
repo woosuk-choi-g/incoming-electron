@@ -52,10 +52,8 @@ function TimerManager() {
     try {
       await createTimer({
         title: '새 타이머',
-        state: {
-          type: 'paused',
-          duration,
-        },
+        duration,
+        repeat: false,
       });
     } catch (error) {
       console.error('타이머 창 생성 실패:', error);

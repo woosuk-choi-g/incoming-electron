@@ -1,5 +1,5 @@
 import { defineIpcFunction } from './ipcUtil';
-import { CreateTimerOption, Timer } from './timer';
+import type { CreateTimerOption, Timer, UpdateTimerOption } from './timer';
 
 export const getTimer = defineIpcFunction<[timerId: string], Timer | undefined>(
   'get-timer'
@@ -9,7 +9,7 @@ export const addTimer = defineIpcFunction<[option: CreateTimerOption], Timer>(
   'add-timer'
 );
 export const updateTimer = defineIpcFunction<
-  [timerId: string, option: CreateTimerOption],
+  [timerId: string, option: UpdateTimerOption],
   void
 >('update-timer');
 export const removeTimer = defineIpcFunction<[timerId: string], void>(

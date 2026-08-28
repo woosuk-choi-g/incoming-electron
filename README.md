@@ -11,7 +11,7 @@ MVP 범위를 구분해 프로젝트 상태를 설명합니다.
 - 시간 입력을 통한 타이머 생성
 - 타이머별 Electron 오버레이 창 생성과 종료
 - 시스템 시간 기준 카운트다운 표시
-- 일시정지와 재개
+- 시작·일시정지·재개·초기화·완료·반복을 표현하는 타이머 상태 모델
 - 메인 창의 타이머 목록
 - 시스템 트레이에서 메인 창 열기와 앱 종료
 - 타이머 repository와 JSON 저장 기반
@@ -95,3 +95,4 @@ npm run test:e2e
 - [시작하기 가이드](docs/getting-started.md)
 - [빌드 환경 변수 가이드](docs/build-environment.md)
 - [오버레이 기술 리서치](docs/RESEARCH.md)
+- [ADR 0001: 타이머 완료 여부를 파생 상태로 계산](docs/decisions/0001-derived-timer-completion.md)

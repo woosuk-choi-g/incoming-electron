@@ -1,6 +1,10 @@
 import { ElectronAPI } from '../../../electron/preload';
-import type { CreateTimerOption, Timer } from '../../../shared/timer';
-import { getTimerDuration } from '../../../shared/timerState';
+import {
+  createTimer as createTimerModel,
+  createTimerOptionSchema,
+  type CreateTimerOption,
+  type Timer,
+} from '../../../shared/timer';
 
 export type TimerRuntime = 'electron' | 'web';
 
@@ -30,23 +34,15 @@ function createWebTimerGateway(): TimerGateway {
   return {
     runtime: 'web',
     createTimer: (options) => {
-      if (options.title.trim().length === 0) {
-        return Promise.reject(new Error('타이머 제목이 필요합니다.'));
+      const validatedOptions = createTimerOptionSchema.safeParse(options);
+      if (!validatedOptions.success) {
+        return Promise.reject(new Error('올바른 타이머 설정이 필요합니다.'));
       }
 
-      const duration = getTimerDuration(options.state);
-      if (!Number.isFinite(duration) || duration <= 0) {
-        return Promise.reject(new Error('타이머 시간은 0보다 커야 합니다.'));
-      }
-
-      const timer: Timer = {
-        id: createBrowserId(),
-        title: options.title.trim(),
-        state: options.state,
-      };
+      const timer = createTimerModel(createBrowserId(), validatedOptions.data);
       const searchParams = new URLSearchParams({
         title: timer.title,
-        duration: duration.toString(),
+        duration: timer.duration.toString(),
       });
       const overlayUrl = new URL(window.location.href);
       overlayUrl.hash = `/timer-overlay/${encodeURIComponent(timer.id)}?${searchParams.toString()}`;

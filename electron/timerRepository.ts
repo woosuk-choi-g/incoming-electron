@@ -1,5 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { CreateTimerOption, Timer } from '../shared/timer';
+import {
+  createTimer,
+  type CreateTimerOption,
+  type Timer,
+  type UpdateTimerOption,
+} from '../shared/timer';
 
 export function createTimerRepository() {
   const timers = new Map<string, Timer>();
@@ -23,15 +28,12 @@ export function createTimerRepository() {
   }
 
   function add(option: CreateTimerOption) {
-    const timer: Timer = {
-      ...option,
-      id: generateTimerId(),
-    };
+    const timer = createTimer(generateTimerId(), option);
     timers.set(timer.id, timer);
     return timer;
   }
 
-  function update(timerId: string, option: CreateTimerOption) {
+  function update(timerId: string, option: UpdateTimerOption) {
     const timer = timers.get(timerId);
     if (!timer) {
       throw new Error(`not found timer: ${timerId}`);

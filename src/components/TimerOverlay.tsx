@@ -39,7 +39,9 @@ function TimerOverlay() {
       return;
     }
     electronAPI?.updateTimer(timerId, {
-      ...timer,
+      title: timer.title,
+      duration: timer.duration,
+      repeat: timer.repeat,
       state: pause(state),
     });
   }, [timer]);
@@ -50,18 +52,16 @@ function TimerOverlay() {
       return;
     }
     electronAPI?.updateTimer(timerId, {
-      ...timer,
+      title: timer.title,
+      duration: timer.duration,
+      repeat: timer.repeat,
       state: resume(state),
     });
   }, [timer]);
 
   return (
     <div className="timer-overlay">
-      <TimerView
-        timer={timer}
-        onPause={handlePause}
-        onResume={handleResume}
-      />
+      <TimerView timer={timer} onPause={handlePause} onResume={handleResume} />
     </div>
   );
 }
