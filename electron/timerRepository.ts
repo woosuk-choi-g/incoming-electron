@@ -27,6 +27,10 @@ export function createTimerRepository() {
     return [...timers.values()];
   }
 
+  function insert(timer: Timer) {
+    timers.set(timer.id, timer);
+  }
+
   function add(option: CreateTimerOption) {
     const timer = createTimer(generateTimerId(), option);
     timers.set(timer.id, timer);
@@ -53,6 +57,7 @@ export function createTimerRepository() {
     generateTimerId,
     get,
     getAll,
+    insert,
     add,
     update,
     remove,

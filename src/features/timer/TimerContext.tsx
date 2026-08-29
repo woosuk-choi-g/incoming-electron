@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -14,6 +15,7 @@ import {
   type TimerGateway,
   type TimerRuntime,
 } from './timerGateway';
+import useElectronAPI from '../../hooks/useElectronAPI';
 
 interface TimerContextValue {
   timers: Timer[];
@@ -32,6 +34,7 @@ interface TimerProviderProps {
 export function TimerProvider({ children, gateway }: TimerProviderProps) {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [activeGateway] = useState(() => gateway ?? createTimerGateway());
+  const electronAPI = useElectronAPI();
 
   const createTimer = useCallback(
     async (options: CreateTimerOption) => {
@@ -49,6 +52,37 @@ export function TimerProvider({ children, gateway }: TimerProviderProps) {
     },
     [activeGateway]
   );
+
+  useEffect(() => {
+    if (!electronAPI) {
+      return;
+    }
+
+    const api = electronAPI;
+    let ignore = false;
+
+    async function loadTimers() {
+      try {
+        const loadedTimers = await api.getAllTimers();
+        if (!ignore) {
+          setTimers(loadedTimers);
+          void api.log(
+            `타이머 목록 로드 완료: ${loadedTimers.length}개`
+          );
+        }
+      } catch (error) {
+        if (!ignore) {
+          void api.log(`타이머 목록 로드 실패: ${String(error)}`);
+        }
+      }
+    }
+
+    void loadTimers();
+
+    return () => {
+      ignore = true;
+    };
+  }, [electronAPI]);
 
   const value = useMemo(
     () => ({

@@ -54,6 +54,13 @@ describe('local persist', () => {
     await expect(persist.load()).resolves.toEqual(data);
   });
 
+  it('returns undefined when the persisted file does not exist', async () => {
+    const filename = await createTemporaryFilePath();
+    const persist = createLocalPersist(filename);
+
+    await expect(persist.load()).resolves.toBeUndefined();
+  });
+
   it('rejects malformed persisted data', async () => {
     const filename = await createTemporaryFilePath();
     const persist = createLocalPersist(filename);

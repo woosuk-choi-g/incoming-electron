@@ -9,6 +9,24 @@ export const localPersistedDataSchema = z.object({
 
 export type LocalPersistedData = z.infer<typeof localPersistedDataSchema>;
 
+function isNodeError(error: unknown): error is Error & { code: unknown } {
+  return error instanceof Error && 'code' in error;
+}
+
+async function readFileIfExists(
+  filename: string
+): Promise<string | undefined> {
+  try {
+    return await fs.promises.readFile(filename, 'utf-8');
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
 export function createLocalPersistedData(data: Timer[]) {
   return {
     saveAt: new Date().toISOString(),
@@ -22,11 +40,18 @@ export function createLocalPersist(filename: string) {
   }
 
   async function load(): Promise<LocalPersistedData | undefined> {
-    if (!(await fs.promises.stat(filename))) {
+    const json = await readFileIfExists(filename);
+
+    if (json === undefined) {
       return undefined;
     }
-    const json = await fs.promises.readFile(filename, 'utf-8');
-    return localPersistedDataSchema.parse(JSON.parse(json));
+
+    try {
+      return localPersistedDataSchema.parse(JSON.parse(json));
+    } catch (e) {
+      console.error(`타이머 목록 로드 실패: ${String(e)}`);
+      return undefined;
+    }
   }
 
   return {

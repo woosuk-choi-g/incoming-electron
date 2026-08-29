@@ -345,6 +345,28 @@ function broadcastTimers(timers: Timer[]) {
   });
 }
 
+async function createUserContext() {
+  const persist = createLocalPersist(
+    path.join(app.getPath('userData'), 'data.json')
+  );
+  const timerRepository = createTimerRepository();
+
+  const localData = await persist.load();
+  if (localData) {
+    const timers = localData.data;
+    timers.forEach((timer) => {
+      timerRepository.insert(timer);
+    });
+  }
+
+  return {
+    timerRepository,
+    persist,
+  }
+}
+
+const userContext = createUserContext();
+
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -396,7 +418,9 @@ void app.whenReady().then(() => {
     }
   );
 
-  ipcMain.handle('create-timer', (_event, unsafeOptions: unknown): Timer => {
+  ipcMain.handle('create-timer', async (_event, unsafeOptions: unknown): Promise<Timer> => {
+    const { timerRepository, persist } = await userContext;
+
     const options = validateCreateTimerOption(unsafeOptions);
     const timer = timerRepository.add(options);
 
@@ -404,10 +428,14 @@ void app.whenReady().then(() => {
 
     broadcastTimers(timerRepository.getAll());
 
+    persist.save(createLocalPersistedData(timerRepository.getAll()));
+
     return timer;
   });
 
-  handleIpc(updateTimer, (_event, timerId, unsafeOption) => {
+  handleIpc(updateTimer, async (_event, timerId, unsafeOption) => {
+    const { timerRepository, persist } = await userContext;
+
     const options = validateUpdateTimerOption(unsafeOption);
     timerRepository.update(timerId, options);
 
@@ -416,15 +444,19 @@ void app.whenReady().then(() => {
     persist.save(createLocalPersistedData(timerRepository.getAll()));
   });
 
-  handleIpc(getTimer, (_event, timerId) => {
+  handleIpc(getTimer, async (_event, timerId) => {
+    const { timerRepository } = await userContext;
     return timerRepository.get(timerId);
   });
 
-  ipcMain.handle('get-all-timers', (_event) => {
+  ipcMain.handle('get-all-timers', async (_event) => {
+    const { timerRepository } = await userContext;
     return timerRepository.getAll();
   });
 
-  ipcMain.handle('remove-timer', (_event, timerId: string) => {
+  ipcMain.handle('remove-timer', async (_event, timerId: string) => {
+    const { timerRepository, persist } = await userContext;
+
     timerRepository.remove(timerId);
 
     broadcastTimers(timerRepository.getAll());
