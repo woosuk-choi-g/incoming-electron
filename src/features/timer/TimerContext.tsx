@@ -66,9 +66,7 @@ export function TimerProvider({ children, gateway }: TimerProviderProps) {
         const loadedTimers = await api.getAllTimers();
         if (!ignore) {
           setTimers(loadedTimers);
-          void api.log(
-            `타이머 목록 로드 완료: ${loadedTimers.length}개`
-          );
+          void api.log(`타이머 목록 로드 완료: ${loadedTimers.length}개`);
         }
       } catch (error) {
         if (!ignore) {

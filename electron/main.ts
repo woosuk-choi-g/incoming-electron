@@ -85,11 +85,8 @@ let win: BrowserWindow | null;
 let timerWindows: Map<string, BrowserWindow> = new Map(); // Manage multiple timer windows
 let tray: Tray | null = null; // Keep tray alive for app lifetime
 let isQuitting = false;
+let isWaitingForPendingSaves = false;
 let trayMenuLabels: string[] = [];
-const timerRepository = createTimerRepository();
-const persist = createLocalPersist(
-  path.join(app.getPath('userData'), 'data.json')
-);
 
 function getTrayIcon() {
   const platformAsset =
@@ -362,7 +359,7 @@ async function createUserContext() {
   return {
     timerRepository,
     persist,
-  }
+  };
 }
 
 const userContext = createUserContext();
@@ -389,8 +386,24 @@ void app.whenReady().then(() => {
   createWindow();
   createTray();
 
-  app.on('before-quit', () => {
+  app.on('before-quit', (event) => {
     isQuitting = true;
+
+    if (!isWaitingForPendingSaves) {
+      event.preventDefault();
+      isWaitingForPendingSaves = true;
+
+      void userContext
+        .then(({ persist }) => persist.flush())
+        .catch((error) => {
+          console.error('종료 전 타이머 저장 실패:', error);
+        })
+        .finally(() => {
+          app.quit();
+        });
+      return;
+    }
+
     if (tray) {
       tray.destroy();
       tray = null;
@@ -418,20 +431,27 @@ void app.whenReady().then(() => {
     }
   );
 
-  ipcMain.handle('create-timer', async (_event, unsafeOptions: unknown): Promise<Timer> => {
-    const { timerRepository, persist } = await userContext;
+  ipcMain.handle(
+    'create-timer',
+    async (_event, unsafeOptions: unknown): Promise<Timer> => {
+      const { timerRepository, persist } = await userContext;
 
-    const options = validateCreateTimerOption(unsafeOptions);
-    const timer = timerRepository.add(options);
+      const options = validateCreateTimerOption(unsafeOptions);
+      const timer = timerRepository.add(options);
 
-    createOverlayTimerWindow(timer.id, timer.title, timer.duration);
+      createOverlayTimerWindow(timer.id, timer.title, timer.duration);
 
-    broadcastTimers(timerRepository.getAll());
+      broadcastTimers(timerRepository.getAll());
 
-    persist.save(createLocalPersistedData(timerRepository.getAll()));
+      void persist
+        .save(createLocalPersistedData(timerRepository.getAll()))
+        .catch((error) => {
+          console.error('타이머 저장 실패:', error);
+        });
 
-    return timer;
-  });
+      return timer;
+    }
+  );
 
   handleIpc(updateTimer, async (_event, timerId, unsafeOption) => {
     const { timerRepository, persist } = await userContext;
@@ -441,7 +461,11 @@ void app.whenReady().then(() => {
 
     broadcastTimers(timerRepository.getAll());
 
-    persist.save(createLocalPersistedData(timerRepository.getAll()));
+    void persist
+      .save(createLocalPersistedData(timerRepository.getAll()))
+      .catch((error) => {
+        console.error('타이머 저장 실패:', error);
+      });
   });
 
   handleIpc(getTimer, async (_event, timerId) => {
@@ -461,7 +485,11 @@ void app.whenReady().then(() => {
 
     broadcastTimers(timerRepository.getAll());
 
-    persist.save(createLocalPersistedData(timerRepository.getAll()));
+    void persist
+      .save(createLocalPersistedData(timerRepository.getAll()))
+      .catch((error) => {
+        console.error('타이머 저장 실패:', error);
+      });
   });
 
   ipcMain.handle('close-timer-window', (_event, timerId) => {

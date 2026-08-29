@@ -13,9 +13,7 @@ function isNodeError(error: unknown): error is Error & { code: unknown } {
   return error instanceof Error && 'code' in error;
 }
 
-async function readFileIfExists(
-  filename: string
-): Promise<string | undefined> {
+async function readFileIfExists(filename: string): Promise<string | undefined> {
   try {
     return await fs.promises.readFile(filename, 'utf-8');
   } catch (error) {
@@ -34,9 +32,39 @@ export function createLocalPersistedData(data: Timer[]) {
   };
 }
 
-export function createLocalPersist(filename: string) {
-  async function save(data: LocalPersistedData) {
-    await fs.promises.writeFile(filename, JSON.stringify(data));
+type PersistWriter = (filename: string, contents: string) => Promise<void>;
+
+async function writeFileAtomically(filename: string, contents: string) {
+  const temporaryFilename = `${filename}.tmp`;
+
+  await fs.promises.writeFile(temporaryFilename, contents);
+  await fs.promises.rename(temporaryFilename, filename);
+}
+
+export function createLocalPersist(
+  filename: string,
+  writePersistedFile: PersistWriter = writeFileAtomically
+) {
+  let saveQueue = Promise.resolve();
+
+  function save(data: LocalPersistedData): Promise<void> {
+    const contents = JSON.stringify(data);
+    const saveTask = saveQueue.then(() =>
+      writePersistedFile(filename, contents)
+    );
+
+    saveQueue = saveTask.catch(() => undefined);
+
+    return saveTask;
+  }
+
+  async function flush(): Promise<void> {
+    let pendingQueue: Promise<void>;
+
+    do {
+      pendingQueue = saveQueue;
+      await pendingQueue;
+    } while (pendingQueue !== saveQueue);
   }
 
   async function load(): Promise<LocalPersistedData | undefined> {
@@ -57,6 +85,7 @@ export function createLocalPersist(filename: string) {
   return {
     filename,
     save,
+    flush,
     load,
   };
 }
