@@ -21,7 +21,12 @@ function TimerView({ timer, onPause, onResume }: TimerViewProps) {
     return <div className="overlay-loading">타이머 불러오는 중…</div>;
   }
 
-  const presentation = getTimerPresentation(timer.state, timer.duration, timer.repeat, now);
+  const presentation = getTimerPresentation(
+    timer.state,
+    timer.duration,
+    timer.repeat,
+    now
+  );
   const canToggle = presentation.status !== 'expired';
   const isRunning = presentation.status === 'running';
   const progressStyle = {
