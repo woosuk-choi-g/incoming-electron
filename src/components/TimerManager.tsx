@@ -214,7 +214,11 @@ function TimerManager() {
               </div>
             ) : (
               timers.map((timer) => {
-                const view = getTimerPresentation(timer.state, timer.duration);
+                const view = getTimerPresentation(
+                  timer.state,
+                  timer.duration,
+                  timer.repeat
+                );
                 return (
                   <article
                     className="timer-item"
