@@ -109,6 +109,8 @@ export default [
       'release/**',
       'playwright-report/**',
       'test-results/**',
+      'tmp/**',
+      'temp/**',
     ],
   },
 ];
