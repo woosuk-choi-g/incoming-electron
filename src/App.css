@@ -361,6 +361,7 @@
   font-size: 12px;
 }
 .timer-overlay {
+  position: relative;
   height: 100vh;
   min-height: 0;
   padding: 12px;
@@ -368,6 +369,32 @@
   place-items: stretch;
   overflow: hidden;
   background: transparent;
+}
+.overlay-close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(141, 160, 164, 0.4);
+  border-radius: 8px;
+  padding: 0;
+  background: rgba(10, 15, 17, 0.82);
+  color: #aebfc1;
+  font: 400 22px/1 sans-serif;
+  -webkit-app-region: no-drag;
+}
+.overlay-close-button:hover {
+  border-color: rgba(255, 77, 94, 0.72);
+  background: rgba(255, 77, 94, 0.16);
+  color: #ff8792;
+}
+.overlay-close-button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
 }
 .timer-hud {
   --urgency: var(--cyan);
