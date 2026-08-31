@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { BaseTimer, Timer } from '../shared/timer';
-import { getTimer, updateTimer } from '../shared/timerIpc';
-import { invokeIpc } from './ipcRendererUtil';
+import { getTimer, onTick, updateTimer } from '../shared/timerIpc';
+import { invokeIpc, onBroadcast } from './ipcRendererUtil';
 
 /**
  * Security boundary for renderer-facing APIs.
@@ -92,6 +92,9 @@ const electronAPI = {
   },
   log: async (message: unknown) => {
     ipcRenderer.invoke('log', message);
+  },
+  onTick: (callback: (now: number) => void) => {
+    return onBroadcast(onTick, callback);
   },
 };
 

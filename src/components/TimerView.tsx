@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { Timer } from '../../shared/timer';
 import { getTimerPresentation } from '../../shared/timerPresentation';
+import useElectronAPI from '../hooks/useElectronAPI';
 
 interface TimerViewProps {
   timer?: Timer;
@@ -10,12 +11,17 @@ interface TimerViewProps {
 
 function TimerView({ timer, onPause, onResume }: TimerViewProps) {
   const [now, setNow] = useState(() => Date.now());
+  const electronAPI = useElectronAPI();
 
   useEffect(() => {
-    if (!timer || timer.state.type !== 'running') return;
-    const intervalId = window.setInterval(() => setNow(Date.now()), 10);
-    return () => window.clearInterval(intervalId);
-  }, [timer]);
+    const dispose = electronAPI?.onTick((now) => {
+      setNow(now);
+    });
+
+    return () => {
+      dispose?.();
+    };
+  }, []);
 
   if (!timer) {
     return <div className="overlay-loading">타이머 불러오는 중…</div>;

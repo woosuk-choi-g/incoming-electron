@@ -19,8 +19,8 @@ import {
   type Timer,
 } from '../shared/timer';
 import { createTimerRepository } from './timerRepository';
-import { handleIpc } from './ipcMainUtil';
-import { getTimer, updateTimer } from '../shared/timerIpc';
+import { broadcast, handleIpc } from './ipcMainUtil';
+import { getTimer, onTick, updateTimer } from '../shared/timerIpc';
 import { createLocalPersist, createLocalPersistedData } from './localPersist';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -529,4 +529,9 @@ void app.whenReady().then(() => {
   ipcMain.handle('log', (_event, message: unknown) => {
     console.log(message);
   });
+
+
+  setInterval(() => {
+    broadcast(onTick, Date.now());
+  }, 10);
 });
