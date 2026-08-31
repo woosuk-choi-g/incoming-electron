@@ -6,7 +6,7 @@ const distMainPath = path.join(process.cwd(), 'dist-electron', 'main.js');
 
 // Playwright requires fixture arguments to use object destructuring.
 // eslint-disable-next-line no-empty-pattern
-test('creates and closes a timer overlay window via the manager UI', async ({}, testInfo) => {
+test('creates and closes a timer overlay without deleting the timer', async ({}, testInfo) => {
   test.skip(
     !fs.existsSync(distMainPath),
     'Run `npm run build` before executing Electron E2E tests.'
@@ -77,9 +77,12 @@ test('creates and closes a timer overlay window via the manager UI', async ({}, 
     await expect(newTimer).not.toContainText(/ID:/);
 
     const closePromise = overlayWindow.waitForEvent('close');
-    await newTimer.getByTestId('remove-timer').click();
+    await overlayWindow.getByTestId('close-timer-overlay').click();
 
     await closePromise;
+    await expect(timerItems).toHaveCount(initialCount + 1);
+
+    await newTimer.getByTestId('remove-timer').click();
     await expect(timerItems).toHaveCount(initialCount);
   } finally {
     await electronApp.close();

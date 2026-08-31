@@ -59,8 +59,22 @@ function TimerOverlay() {
     });
   }, [timer]);
 
+  const handleClose = useCallback(() => {
+    void electronAPI?.closeTimerWindow(timerId);
+  }, [electronAPI, timerId]);
+
   return (
     <div className="timer-overlay">
+      <button
+        type="button"
+        className="overlay-close-button"
+        aria-label="타이머 오버레이 닫기"
+        title="닫기"
+        data-testid="close-timer-overlay"
+        onClick={handleClose}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
       <TimerView timer={timer} onPause={handlePause} onResume={handleResume} />
     </div>
   );
