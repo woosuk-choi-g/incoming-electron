@@ -1,6 +1,6 @@
 import z from 'zod';
 
-const durationSchema = z.number().positive();
+const durationSchema = z.number();
 const timestampSchema = z.number();
 
 export const pausedTimerStateSchema = z.object({
@@ -8,16 +8,11 @@ export const pausedTimerStateSchema = z.object({
   duration: durationSchema,
 });
 
-export const runningTimerStateSchema = z
-  .object({
-    type: z.literal('running'),
-    startTime: timestampSchema,
-    expiryTime: timestampSchema,
-  })
-  .refine((state) => state.expiryTime > state.startTime, {
-    message: '종료 시각은 시작 시각보다 늦어야 합니다.',
-    path: ['expiryTime'],
-  });
+export const runningTimerStateSchema = z.object({
+  type: z.literal('running'),
+  startTime: timestampSchema,
+  expiryTime: timestampSchema,
+});
 
 export const timerStateSchema = z.discriminatedUnion('type', [
   pausedTimerStateSchema,
