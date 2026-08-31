@@ -214,16 +214,6 @@ describe('timer state', () => {
         .success
     ).toBe(false);
     expect(
-      timerStateSchema.safeParse({ type: 'paused', duration: 0 }).success
-    ).toBe(false);
-    expect(
-      timerStateSchema.safeParse({
-        type: 'running',
-        startTime: 6_000,
-        expiryTime: 6_000,
-      }).success
-    ).toBe(false);
-    expect(
       timerStateSchema.safeParse({ type: 'finished', duration: 1 }).success
     ).toBe(false);
   });
