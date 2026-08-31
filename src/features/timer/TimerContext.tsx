@@ -21,6 +21,7 @@ interface TimerContextValue {
   timers: Timer[];
   runtime: TimerRuntime;
   createTimer: (options: BaseTimer) => Promise<void>;
+  openTimer: (timer: Timer) => Promise<void>;
   removeTimer: (timerId: string) => Promise<void>;
 }
 
@@ -49,6 +50,13 @@ export function TimerProvider({ children, gateway }: TimerProviderProps) {
       await activeGateway.removeTimer(timerId);
 
       setTimers((current) => current.filter((timer) => timer.id !== timerId));
+    },
+    [activeGateway]
+  );
+
+  const openTimer = useCallback(
+    async (timer: Timer) => {
+      await activeGateway.openTimer(timer);
     },
     [activeGateway]
   );
@@ -87,9 +95,10 @@ export function TimerProvider({ children, gateway }: TimerProviderProps) {
       timers,
       runtime: activeGateway.runtime,
       createTimer,
+      openTimer,
       removeTimer,
     }),
-    [activeGateway.runtime, timers, createTimer, removeTimer]
+    [activeGateway.runtime, timers, createTimer, openTimer, removeTimer]
   );
 
   return (

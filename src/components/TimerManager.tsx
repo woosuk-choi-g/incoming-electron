@@ -38,7 +38,7 @@ function configToDuration(config: TimerConfig): number {
 }
 
 function TimerManager() {
-  const { timers, runtime, createTimer, removeTimer } = useTimers();
+  const { timers, runtime, createTimer, openTimer, removeTimer } = useTimers();
   const [config, setConfig] = useState(initialConfig);
   const [error, setError] = useState('');
   const electronAPI = useElectronAPI();
@@ -256,15 +256,26 @@ function TimerManager() {
                         <span>{timer.repeat ? '반복 ON' : '1회'}</span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void removeTimer(timer.id)}
-                      className="remove-timer-button"
-                      aria-label={`${timer.title} 제거`}
-                      data-testid="remove-timer"
-                    >
-                      제거
-                    </button>
+                    <div className="timer-actions">
+                      <button
+                        type="button"
+                        onClick={() => void openTimer(timer)}
+                        className="open-timer-button"
+                        aria-label={`${timer.title} 오버레이 열기`}
+                        data-testid="open-timer"
+                      >
+                        열기
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void removeTimer(timer.id)}
+                        className="remove-timer-button"
+                        aria-label={`${timer.title} 제거`}
+                        data-testid="remove-timer"
+                      >
+                        제거
+                      </button>
+                    </div>
                   </article>
                 );
               })

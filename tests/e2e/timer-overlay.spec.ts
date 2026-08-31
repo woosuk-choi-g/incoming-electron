@@ -76,7 +76,24 @@ test('creates and closes a timer overlay window via the manager UI', async ({}, 
     const newTimer = mainWindow.getByTestId('timer-item').last();
     await expect(newTimer).not.toContainText(/ID:/);
 
-    const closePromise = overlayWindow.waitForEvent('close');
+    const closedOverlayPromise = overlayWindow.waitForEvent('close');
+    await overlayWindow.close();
+    await closedOverlayPromise;
+
+    const reopenedOverlayPromise = electronApp.waitForEvent(
+      'window',
+      (page) => page !== mainWindow
+    );
+    await newTimer.getByTestId('open-timer').click();
+
+    const reopenedOverlay = await reopenedOverlayPromise;
+    await reopenedOverlay.waitForLoadState('domcontentloaded');
+    await expect(reopenedOverlay).toHaveURL(/#\/timer-overlay\//);
+    await expect(reopenedOverlay.getByTestId('timer-display')).toHaveText(
+      '00:05.00'
+    );
+
+    const closePromise = reopenedOverlay.waitForEvent('close');
     await newTimer.getByTestId('remove-timer').click();
 
     await closePromise;

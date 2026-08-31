@@ -308,6 +308,11 @@
   color: var(--muted);
   font-size: 10px;
 }
+.timer-actions {
+  display: flex;
+  gap: 6px;
+}
+.open-timer-button,
 .remove-timer-button {
   border: 1px solid #4b3337;
   border-radius: 7px;
@@ -315,6 +320,14 @@
   color: #dc8f96;
   padding: 7px 9px;
   font-size: 11px;
+}
+.open-timer-button {
+  border-color: #315b58;
+  color: var(--cyan);
+}
+.open-timer-button:hover {
+  border-color: var(--cyan);
+  color: #fff;
 }
 .remove-timer-button:hover {
   border-color: var(--red);
