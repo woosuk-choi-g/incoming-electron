@@ -8,6 +8,7 @@ describe('timer model', () => {
         title: '  Respawn  ',
         duration: 30_000,
         repeat: true,
+        state: { type: 'paused', duration: 30_000 },
       })
     ).toEqual({
       id: 'timer-1',
@@ -24,6 +25,7 @@ describe('timer model', () => {
         title: ' ',
         duration: 30_000,
         repeat: false,
+        state: { type: 'paused', duration: 30_000 },
       })
     ).toThrow();
     expect(() =>
@@ -31,6 +33,7 @@ describe('timer model', () => {
         title: 'Respawn',
         duration: 0,
         repeat: false,
+        state: { type: 'paused', duration: 0 },
       })
     ).toThrow();
   });

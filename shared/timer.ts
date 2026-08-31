@@ -1,32 +1,24 @@
 import z from 'zod';
-import { reset, timerStateSchema } from './timerState';
+import { timerStateSchema } from './timerState';
 
-export const timerSchema = z.object({
-  id: z.string().min(1),
+export const baseTimerSchema = z.object({
   title: z.string().trim().min(1),
   duration: z.number().positive(),
   repeat: z.boolean(),
   state: timerStateSchema,
 });
 
-export type Timer = z.infer<typeof timerSchema>;
+export type BaseTimer = z.infer<typeof baseTimerSchema>;
 
-export const createTimerOptionSchema = timerSchema.pick({
-  title: true,
-  duration: true,
-  repeat: true,
+export const timerSchema = baseTimerSchema.extend({
+  id: z.string().min(1),
 });
 
-export type CreateTimerOption = z.infer<typeof createTimerOptionSchema>;
+export type Timer = z.infer<typeof timerSchema>;
 
-export const updateTimerOptionSchema = timerSchema.omit({ id: true });
-
-export type UpdateTimerOption = z.infer<typeof updateTimerOptionSchema>;
-
-export function createTimer(id: string, option: CreateTimerOption): Timer {
+export function createTimer(id: string, option: BaseTimer): Timer {
   return timerSchema.parse({
-    id,
     ...option,
-    state: reset(option.duration),
+    id,
   });
 }

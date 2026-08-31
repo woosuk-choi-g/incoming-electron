@@ -62,22 +62,60 @@ describe('timer state', () => {
 
   it('rejects a non-positive or non-finite duration', () => {
     expect(() => start(0, 1_000)).toThrow('0보다 커야 합니다');
-    expect(() => reset(Number.POSITIVE_INFINITY)).toThrow('0보다 커야 합니다');
+    expect(() =>
+      reset(
+        { type: 'running', startTime: 1_000, expiryTime: 6_000 },
+        Number.POSITIVE_INFINITY,
+        2_500
+      )
+    ).toThrow('0보다 커야 합니다');
   });
 
-  it('pauses a running timer with its remaining duration', () => {
+  it('pauses a one-time timer that has not yet expired', () => {
     expect(
-      pause({ type: 'running', startTime: 1_000, expiryTime: 6_000 }, 2_500)
+      pause(
+        { type: 'running', startTime: 1_000, expiryTime: 6_000 },
+        5_000,
+        false,
+        2_500
+      )
     ).toEqual({ type: 'paused', duration: 3_500 });
   });
 
-  it('rejects pausing an expired timer', () => {
-    expect(() =>
-      pause({ type: 'running', startTime: 1_000, expiryTime: 6_000 }, 7_000)
-    ).toThrow('완료된 타이머');
+  it('pauses a one-time timer that has already expired', () => {
+    expect(
+      pause(
+        { type: 'running', startTime: 1_000, expiryTime: 6_000 },
+        2_000,
+        false,
+        7_500
+      )
+    ).toEqual({ type: 'paused', duration: -1_500 });
   });
 
-  it('resumes a paused timer from the supplied time', () => {
+  it('pauses a repeatable timer that has not yet expired', () => {
+    expect(
+      pause(
+        { type: 'running', startTime: 1_000, expiryTime: 6_000 },
+        5_000,
+        true,
+        2_500
+      )
+    ).toEqual({ type: 'paused', duration: 3_500 });
+  });
+
+  it('pauses a repeatable timer that has already expired', () => {
+    expect(
+      pause(
+        { type: 'running', startTime: 1_000, expiryTime: 6_000 },
+        5_000,
+        true,
+        7_500
+      )
+    ).toEqual({ type: 'paused', duration: 3_500 });
+  });
+
+  it('resumes a paused timer', () => {
     expect(resume({ type: 'paused', duration: 3_500 }, 2_500)).toEqual({
       type: 'running',
       startTime: 2_500,
@@ -85,8 +123,34 @@ describe('timer state', () => {
     });
   });
 
-  it('resets a timer to its configured duration', () => {
-    expect(reset(30_000)).toEqual({ type: 'paused', duration: 30_000 });
+  it('resets a paused timer', () => {
+    expect(
+      reset(
+        { type: 'paused', duration: 3_500 },
+        5_000,
+        2_500
+      )
+    ).toEqual({ type: 'paused', duration: 5_000 });
+  });
+
+  it('resets a running timer', () => {
+    expect(
+      reset(
+        {
+          type: 'running',
+          startTime: 1_000,
+          expiryTime: 6_000,
+        },
+        5_000,
+        2_500
+      )
+    ).toEqual(
+      {
+        type: 'running',
+        startTime: 2_500,
+        expiryTime: 7_500,
+      }
+    );
   });
 
   it('represents a completed one-shot timer as an expired running timer', () => {

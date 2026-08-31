@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { CreateTimerOption, Timer } from '../../../shared/timer';
+import type { BaseTimer, Timer } from '../../../shared/timer';
 import {
   createTimerGateway,
   type TimerGateway,
@@ -20,7 +20,7 @@ import useElectronAPI from '../../hooks/useElectronAPI';
 interface TimerContextValue {
   timers: Timer[];
   runtime: TimerRuntime;
-  createTimer: (options: CreateTimerOption) => Promise<void>;
+  createTimer: (options: BaseTimer) => Promise<void>;
   removeTimer: (timerId: string) => Promise<void>;
 }
 
@@ -37,7 +37,7 @@ export function TimerProvider({ children, gateway }: TimerProviderProps) {
   const electronAPI = useElectronAPI();
 
   const createTimer = useCallback(
-    async (options: CreateTimerOption) => {
+    async (options: BaseTimer) => {
       const timer = await activeGateway.createTimer(options);
       setTimers((current) => [...current, timer]);
     },

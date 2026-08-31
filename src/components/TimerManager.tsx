@@ -71,6 +71,7 @@ function TimerManager() {
         title: config.title.trim() || `타이머 ${timers.length + 1}`,
         duration,
         repeat: config.repeat,
+        state: { type: 'paused', duration },
       });
       setConfig(initialConfig);
       setError('');

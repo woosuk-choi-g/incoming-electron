@@ -1,9 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type {
-  CreateTimerOption,
-  Timer,
-  UpdateTimerOption,
-} from '../shared/timer';
+import type { BaseTimer, Timer } from '../shared/timer';
 import { getTimer, updateTimer } from '../shared/timerIpc';
 import { invokeIpc } from './ipcRendererUtil';
 
@@ -43,7 +39,7 @@ const electronAPI = {
   openExternal: async (url: string) => {
     return ipcRenderer.invoke('open-external', url);
   },
-  createTimer: async (options: CreateTimerOption) => {
+  createTimer: async (options: BaseTimer) => {
     return ipcRenderer.invoke('create-timer', options);
   },
   getTimer: async (timerId: string) => {
@@ -52,7 +48,7 @@ const electronAPI = {
   getAllTimers: async () => {
     return ipcRenderer.invoke('get-all-timers');
   },
-  updateTimer: async (timerId: string, options: UpdateTimerOption) => {
+  updateTimer: async (timerId: string, options: BaseTimer) => {
     return invokeIpc(updateTimer, timerId, options);
   },
   removeTimer: async (timerId: string) => {
