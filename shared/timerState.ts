@@ -1,6 +1,6 @@
 import z from 'zod';
 
-const durationSchema = z.number().positive();
+const durationSchema = z.number();
 const timestampSchema = z.number();
 
 export const pausedTimerStateSchema = z.object({
@@ -8,16 +8,11 @@ export const pausedTimerStateSchema = z.object({
   duration: durationSchema,
 });
 
-export const runningTimerStateSchema = z
-  .object({
-    type: z.literal('running'),
-    startTime: timestampSchema,
-    expiryTime: timestampSchema,
-  })
-  .refine((state) => state.expiryTime > state.startTime, {
-    message: '종료 시각은 시작 시각보다 늦어야 합니다.',
-    path: ['expiryTime'],
-  });
+export const runningTimerStateSchema = z.object({
+  type: z.literal('running'),
+  startTime: timestampSchema,
+  expiryTime: timestampSchema,
+});
 
 export const timerStateSchema = z.discriminatedUnion('type', [
   pausedTimerStateSchema,
@@ -71,17 +66,16 @@ export function start(duration: number, now = Date.now()): RunningTimerState {
 
 export function pause(
   timer: RunningTimerState,
+  duration: number,
+  repeat: boolean,
   now = Date.now()
 ): PausedTimerState {
-  const duration = getTimerDuration(timer, now);
-
-  if (duration === 0) {
-    throw new Error('완료된 타이머는 일시정지할 수 없습니다.');
-  }
+  const effectiveState = repeat ? advanceAlter(timer, duration, now) : timer;
+  const remain = effectiveState.expiryTime - now;
 
   return {
     type: 'paused',
-    duration,
+    duration: remain,
   };
 }
 
@@ -89,16 +83,35 @@ export function resume(
   timer: PausedTimerState,
   now = Date.now()
 ): RunningTimerState {
-  return start(timer.duration, now);
+  return {
+    type: 'running',
+    startTime: now,
+    expiryTime: now + timer.duration,
+  };
 }
 
-export function reset(duration: number): PausedTimerState {
+export function reset(
+  timer: TimerState,
+  duration: number,
+  now = Date.now()
+): TimerState {
   assertDuration(duration);
 
-  return {
-    type: 'paused',
-    duration,
-  };
+  switch (timer.type) {
+    case 'paused': {
+      return {
+        type: 'paused',
+        duration,
+      };
+    }
+    case 'running': {
+      return {
+        type: 'running',
+        startTime: now,
+        expiryTime: now + duration,
+      };
+    }
+  }
 }
 
 export function complete(
@@ -133,6 +146,14 @@ export function advance(
   }
 
   assertDuration(duration);
+  return advanceAlter(state, duration, now);
+}
+
+export function advanceAlter(
+  state: RunningTimerState,
+  duration: number,
+  now = Date.now()
+): RunningTimerState {
   const elapsedCycles = Math.floor((now - state.expiryTime) / duration) + 1;
   const startTime = state.expiryTime + (elapsedCycles - 1) * duration;
 

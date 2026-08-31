@@ -1,8 +1,8 @@
 import { ElectronAPI } from '../../../electron/preload';
 import {
+  BaseTimer,
+  baseTimerSchema,
   createTimer as createTimerModel,
-  createTimerOptionSchema,
-  type CreateTimerOption,
   type Timer,
 } from '../../../shared/timer';
 
@@ -10,7 +10,7 @@ export type TimerRuntime = 'electron' | 'web';
 
 export interface TimerGateway {
   runtime: TimerRuntime;
-  createTimer: (options: CreateTimerOption) => Promise<Timer>;
+  createTimer: (options: BaseTimer) => Promise<Timer>;
   removeTimer: (timerId: string) => Promise<void>;
 }
 
@@ -34,7 +34,7 @@ function createWebTimerGateway(): TimerGateway {
   return {
     runtime: 'web',
     createTimer: (options) => {
-      const validatedOptions = createTimerOptionSchema.safeParse(options);
+      const validatedOptions = baseTimerSchema.safeParse(options);
       if (!validatedOptions.success) {
         return Promise.reject(new Error('올바른 타이머 설정이 필요합니다.'));
       }

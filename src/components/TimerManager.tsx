@@ -71,6 +71,7 @@ function TimerManager() {
         title: config.title.trim() || `타이머 ${timers.length + 1}`,
         duration,
         repeat: config.repeat,
+        state: { type: 'paused', duration },
       });
       setConfig(initialConfig);
       setError('');
@@ -214,7 +215,11 @@ function TimerManager() {
               </div>
             ) : (
               timers.map((timer) => {
-                const view = getTimerPresentation(timer.state, timer.duration);
+                const view = getTimerPresentation(
+                  timer.state,
+                  timer.duration,
+                  timer.repeat
+                );
                 return (
                   <article
                     className="timer-item"

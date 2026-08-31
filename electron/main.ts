@@ -14,11 +14,9 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import {
-  createTimerOptionSchema,
-  type CreateTimerOption,
+  baseTimerSchema,
+  type BaseTimer,
   type Timer,
-  type UpdateTimerOption,
-  updateTimerOptionSchema,
 } from '../shared/timer';
 import { createTimerRepository } from './timerRepository';
 import { handleIpc } from './ipcMainUtil';
@@ -277,12 +275,12 @@ function closeTimerWindow(timerId: string) {
   }
 }
 
-function validateCreateTimerOption(value: unknown): CreateTimerOption {
-  return createTimerOptionSchema.parse(value);
+function validateCreateTimerOption(value: unknown): BaseTimer {
+  return baseTimerSchema.parse(value);
 }
 
-function validateUpdateTimerOption(value: unknown): UpdateTimerOption {
-  return updateTimerOptionSchema.parse(value);
+function validateUpdateTimerOption(value: unknown): BaseTimer {
+  return baseTimerSchema.parse(value);
 }
 
 // Timer overlay settings management

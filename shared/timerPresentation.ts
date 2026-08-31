@@ -1,5 +1,5 @@
 import type { TimerState, TimerStatus } from './timerState';
-import { getTimerDuration, getTimerStatus } from './timerState';
+import { advance, getTimerDuration, getTimerStatus } from './timerState';
 
 export type TimerUrgency = 'normal' | 'warning' | 'critical' | 'complete';
 
@@ -41,10 +41,12 @@ export function getTimerUrgency(remainingMs: number): TimerUrgency {
 export function getTimerPresentation(
   state: TimerState,
   configuredDuration: number,
+  repeat: boolean,
   now = Date.now()
 ): TimerPresentation {
-  const remainingMs = getTimerDuration(state, now);
-  const status = getTimerStatus(state, now);
+  const effectiveState = advance(state, configuredDuration, repeat, now);
+  const remainingMs = getTimerDuration(effectiveState, now);
+  const status = getTimerStatus(effectiveState, now);
   const statusLabels: Record<TimerStatus, string> = {
     paused: '대기',
     running: '진행 중',

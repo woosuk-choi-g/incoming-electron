@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createTimerRepository } from '../../electron/timerRepository';
+import { BaseTimer } from '../../shared/timer';
 
-const pausedTimer = {
+const pausedTimer: BaseTimer = {
   title: 'Respawn',
   duration: 30_000,
   repeat: false,
+  state: { type: 'paused', duration: 30_000 },
 };
 
 describe('timer repository', () => {
@@ -53,8 +55,7 @@ describe('timer repository', () => {
 
     expect(() =>
       repository.update('missing', {
-        ...pausedTimer,
-        state: { type: 'paused', duration: pausedTimer.duration },
+        ...pausedTimer
       })
     ).toThrow('not found timer: missing');
   });

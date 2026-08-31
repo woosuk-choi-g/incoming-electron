@@ -42,7 +42,7 @@ function TimerOverlay() {
       title: timer.title,
       duration: timer.duration,
       repeat: timer.repeat,
-      state: pause(state),
+      state: pause(state, timer.duration, timer.repeat),
     });
   }, [timer]);
 

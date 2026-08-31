@@ -26,6 +26,7 @@ describe('timer presentation', () => {
       getTimerPresentation(
         { type: 'running', startTime: 1_000, expiryTime: 6_000 },
         5_000,
+        false,
         7_000
       )
     ).toMatchObject({
@@ -34,6 +35,23 @@ describe('timer presentation', () => {
       statusLabel: '완료',
       urgency: 'complete',
       progress: 0,
+    });
+  });
+
+  it('presents repeating timers as active in the current cycle', () => {
+    expect(
+      getTimerPresentation(
+        { type: 'running', startTime: 1_000, expiryTime: 6_000 },
+        5_000,
+        true,
+        7_000
+      )
+    ).toMatchObject({
+      display: '00:04.00',
+      status: 'running',
+      statusLabel: '진행 중',
+      urgency: 'warning',
+      progress: 0.8,
     });
   });
 });

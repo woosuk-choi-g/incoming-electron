@@ -1,9 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import {
   createTimer,
-  type CreateTimerOption,
+  type BaseTimer,
   type Timer,
-  type UpdateTimerOption,
 } from '../shared/timer';
 
 export function createTimerRepository() {
@@ -31,13 +30,13 @@ export function createTimerRepository() {
     timers.set(timer.id, timer);
   }
 
-  function add(option: CreateTimerOption) {
+  function add(option: BaseTimer) {
     const timer = createTimer(generateTimerId(), option);
     timers.set(timer.id, timer);
     return timer;
   }
 
-  function update(timerId: string, option: UpdateTimerOption) {
+  function update(timerId: string, option: BaseTimer) {
     const timer = timers.get(timerId);
     if (!timer) {
       throw new Error(`not found timer: ${timerId}`);
