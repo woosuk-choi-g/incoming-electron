@@ -3,6 +3,31 @@ import type { BaseTimer, Timer } from '../shared/timer';
 import { getTimer, updateTimer } from '../shared/timerIpc';
 import { invokeIpc } from './ipcRendererUtil';
 
+/**
+ * Security boundary for renderer-facing APIs.
+ *
+ * Keep this object a small, capability-based API:
+ * - expose one wrapper per approved IPC channel; never expose `ipcRenderer` or
+ *   its generic `send`, `invoke`, or `on` methods;
+ * - copy only the required event payload into renderer callbacks; never pass
+ *   `IpcRendererEvent`, because it exposes privileged Electron objects;
+ * - accept and return contextBridge/structured-clone-compatible data only;
+ * - validate every renderer argument again in the main-process handler. TypeScript
+ *   types disappear at runtime and do not form a security boundary;
+ * - keep `contextIsolation: true`, `sandbox: true`, and
+ *   `nodeIntegration: false` on every BrowserWindow that uses this preload;
+ * - bundle imports into the preload output. A sandboxed preload has only a
+ *   restricted `require` implementation, not a full Node.js environment.
+ *
+ * Good: `readConfig: () => ipcRenderer.invoke('config:read')`
+ * Bad:  `invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args)`
+ *
+ * Good: `onTick: (cb) => ipcRenderer.on('tick', (_event, value) => cb(value))`
+ * Bad:  `onTick: (cb) => ipcRenderer.on('tick', cb)`
+ *
+ * See ../docs/preload-security.md for the exact Electron 44 constraints,
+ * rationale, review checklist, and expanded examples.
+ */
 const electronAPI = {
   createTimerWindow: async (
     timerId: string,
