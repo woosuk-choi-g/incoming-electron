@@ -9,3 +9,14 @@ export function defineIpcFunction<Args extends unknown[], Result>(
 ): IpcFunction<Args, Result> {
   return { channel };
 }
+
+export interface IpcBroadcast<Args extends unknown[]> {
+  channel: string;
+  __args?: Args;
+}
+
+export function defineBroadcast<Args extends unknown[]>(
+  channel: string
+): IpcBroadcast<Args> {
+  return { channel };
+}
