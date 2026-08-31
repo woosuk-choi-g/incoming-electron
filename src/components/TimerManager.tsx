@@ -1,6 +1,7 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTimers } from '../features/timer/TimerContext';
 import { getTimerPresentation } from '../../shared/timerPresentation';
+import useElectronAPI from '../hooks/useElectronAPI';
 
 interface TimerConfig {
   title: string;
@@ -40,6 +41,18 @@ function TimerManager() {
   const { timers, runtime, createTimer, removeTimer } = useTimers();
   const [config, setConfig] = useState(initialConfig);
   const [error, setError] = useState('');
+  const electronAPI = useElectronAPI();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const dispose = electronAPI?.onTick((now) => {
+      setNow(now);
+    });
+
+    return () => {
+      dispose?.();
+    };
+  }, []);
 
   const setDuration = (duration: number) => {
     setConfig((current) => ({
@@ -218,7 +231,8 @@ function TimerManager() {
                 const view = getTimerPresentation(
                   timer.state,
                   timer.duration,
-                  timer.repeat
+                  timer.repeat,
+                  now,
                 );
                 return (
                   <article
